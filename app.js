@@ -17,7 +17,8 @@ const yearSpan = document.getElementById('year');
 const STORAGE_KEYS = {
   THEME: 'helloworld_theme',
   CUSTOM_GREETING: 'helloworld_greeting',
-  MESSAGES: 'helloworld_guestbook_messages'
+  MESSAGES: 'helloworld_guestbook_messages',
+  QUEUES: 'helloworld_patient_queues'
 };
 
 // Initialize Application
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initGreeting();
   initGuestbook();
+  initQueues();
   initFooterYear();
 });
 
@@ -156,6 +158,140 @@ function escapeHTML(str) {
       '"': '&quot;'
     }[tag] || tag)
   );
+}
+
+/* Check-In Queues Handling */
+function initQueues() {
+  const checkinForm = document.getElementById('checkin-form');
+  const appointmentStatusSelect = document.getElementById('appointment-status');
+  const appointmentTimeGroup = document.getElementById('appointment-time-group');
+  const appointmentTimeInput = document.getElementById('appointment-time');
+
+  if (!checkinForm) return;
+
+  // Toggle visibility and required attribute of appointment time field
+  appointmentStatusSelect.addEventListener('change', () => {
+    if (appointmentStatusSelect.value === 'yes') {
+      appointmentTimeGroup.classList.remove('hidden');
+      appointmentTimeInput.setAttribute('required', 'true');
+    } else {
+      appointmentTimeGroup.classList.add('hidden');
+      appointmentTimeInput.removeAttribute('required');
+      appointmentTimeInput.value = '';
+    }
+  });
+
+  checkinForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const nameInput = document.getElementById('patient-name');
+    const patientName = nameInput.value.trim();
+    const hasAppointment = appointmentStatusSelect.value === 'yes';
+    const appointmentTime = hasAppointment ? appointmentTimeInput.value : null;
+
+    if (!patientName) return;
+
+    const patientRecord = {
+      id: Date.now(),
+      name: patientName,
+      hasAppointment: hasAppointment,
+      appointmentTime: appointmentTime,
+      checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      checkInTimestamp: Date.now()
+    };
+
+    const patients = getStoredPatients();
+    patients.push(patientRecord);
+    saveStoredPatients(patients);
+
+    checkinForm.reset();
+    appointmentTimeGroup.classList.add('hidden');
+    appointmentTimeInput.removeAttribute('required');
+
+    renderQueues();
+  });
+
+  renderQueues();
+}
+
+function getStoredPatients() {
+  const stored = localStorage.getItem(STORAGE_KEYS.QUEUES);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    console.error('Error reading patient queue from storage:', e);
+    return [];
+  }
+}
+
+function saveStoredPatients(patients) {
+  localStorage.setItem(STORAGE_KEYS.QUEUES, JSON.stringify(patients));
+}
+
+function dequeuePatient(patientId) {
+  const patients = getStoredPatients().filter(p => p.id !== patientId);
+  saveStoredPatients(patients);
+  renderQueues();
+}
+
+function renderQueues() {
+  const scheduledQueueList = document.getElementById('scheduled-queue-list');
+  const walkinQueueList = document.getElementById('walkin-queue-list');
+
+  if (!scheduledQueueList || !walkinQueueList) return;
+
+  const allPatients = getStoredPatients();
+
+  // Scheduled Appointments queue ordered by appointment time
+  const scheduledPatients = allPatients
+    .filter(p => p.hasAppointment)
+    .sort((a, b) => (a.appointmentTime || '').localeCompare(b.appointmentTime || ''));
+
+  // Walk-ins queue ordered by time of check-in
+  const walkinPatients = allPatients
+    .filter(p => !p.hasAppointment)
+    .sort((a, b) => a.checkInTimestamp - b.checkInTimestamp);
+
+  // Render Scheduled Queue
+  if (scheduledPatients.length === 0) {
+    scheduledQueueList.innerHTML = `<p class="empty-msg">No scheduled appointments in queue.</p>`;
+  } else {
+    scheduledQueueList.innerHTML = scheduledPatients.map(p => `
+      <div class="queue-card">
+        <div class="queue-card-info">
+          <span class="patient-name">${escapeHTML(p.name)}</span>
+          <span class="patient-time">📅 Appt Time: ${escapeHTML(formatTimeDisplay(p.appointmentTime))}</span>
+          <span class="patient-time-sub">Checked in: ${escapeHTML(p.checkInTime)}</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="dequeuePatient(${p.id})">Complete</button>
+      </div>
+    `).join('');
+  }
+
+  // Render Walk-ins Queue
+  if (walkinPatients.length === 0) {
+    walkinQueueList.innerHTML = `<p class="empty-msg">No walk-ins in queue.</p>`;
+  } else {
+    walkinQueueList.innerHTML = walkinPatients.map(p => `
+      <div class="queue-card">
+        <div class="queue-card-info">
+          <span class="patient-name">${escapeHTML(p.name)}</span>
+          <span class="patient-time">🕒 Checked in: ${escapeHTML(p.checkInTime)}</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="dequeuePatient(${p.id})">Complete</button>
+      </div>
+    `).join('');
+  }
+}
+
+function formatTimeDisplay(timeStr) {
+  if (!timeStr) return '';
+  const [hours, minutes] = timeStr.split(':');
+  if (hours === undefined || minutes === undefined) return timeStr;
+  const date = new Date();
+  date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 /* Footer Year */
