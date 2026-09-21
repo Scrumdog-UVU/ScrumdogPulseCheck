@@ -18,13 +18,15 @@ const STORAGE_KEYS = {
   THEME: 'helloworld_theme',
   CUSTOM_GREETING: 'helloworld_greeting',
   MESSAGES: 'helloworld_guestbook_messages',
-  QUEUES: 'helloworld_patient_queues'
+  CHECKIN_QUEUE: 'helloworld_checkin_queue',
+  MY_TICKET_ID: 'helloworld_my_ticket_id'
 };
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initGreeting();
+  initCheckin();
   initGuestbook();
   initQueues();
   initFooterYear();
@@ -160,138 +162,129 @@ function escapeHTML(str) {
   );
 }
 
-/* Check-In Queues Handling */
-function initQueues() {
+/* Remote Patient Check-In Handling */
+function initCheckin() {
+  const checkinFormContainer = document.getElementById('checkin-form-container');
   const checkinForm = document.getElementById('checkin-form');
-  const appointmentStatusSelect = document.getElementById('appointment-status');
-  const appointmentTimeGroup = document.getElementById('appointment-time-group');
-  const appointmentTimeInput = document.getElementById('appointment-time');
+  const activeTicketCard = document.getElementById('active-ticket-card');
+  const cancelCheckinBtn = document.getElementById('cancel-checkin-btn');
 
-  if (!checkinForm) return;
+  renderCheckinUI();
 
-  // Toggle visibility and required attribute of appointment time field
-  appointmentStatusSelect.addEventListener('change', () => {
-    if (appointmentStatusSelect.value === 'yes') {
-      appointmentTimeGroup.classList.remove('hidden');
-      appointmentTimeInput.setAttribute('required', 'true');
-    } else {
-      appointmentTimeGroup.classList.add('hidden');
-      appointmentTimeInput.removeAttribute('required');
-      appointmentTimeInput.value = '';
-    }
-  });
+  if (checkinForm) {
+    checkinForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-  checkinForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+      const nameInput = document.getElementById('patient-name');
+      const phoneInput = document.getElementById('patient-phone');
+      const reasonSelect = document.getElementById('visit-reason');
 
-    const nameInput = document.getElementById('patient-name');
-    const patientName = nameInput.value.trim();
-    const hasAppointment = appointmentStatusSelect.value === 'yes';
-    const appointmentTime = hasAppointment ? appointmentTimeInput.value : null;
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const reason = reasonSelect.value;
 
-    if (!patientName) return;
+      if (!name || !phone || !reason) return;
 
-    const patientRecord = {
-      id: Date.now(),
-      name: patientName,
-      hasAppointment: hasAppointment,
-      appointmentTime: appointmentTime,
-      checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      checkInTimestamp: Date.now()
-    };
+      const queue = getStoredQueue();
+      const ticketNum = Math.floor(100 + Math.random() * 900);
+      const ticketId = `T-${ticketNum}`;
 
-    const patients = getStoredPatients();
-    patients.push(patientRecord);
-    saveStoredPatients(patients);
+      const newTicket = {
+        id: Date.now().toString(),
+        ticketId,
+        name,
+        phone,
+        reason,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
 
-    checkinForm.reset();
-    appointmentTimeGroup.classList.add('hidden');
-    appointmentTimeInput.removeAttribute('required');
+      queue.push(newTicket);
+      localStorage.setItem(STORAGE_KEYS.CHECKIN_QUEUE, JSON.stringify(queue));
+      localStorage.setItem(STORAGE_KEYS.MY_TICKET_ID, newTicket.id);
 
-    renderQueues();
-  });
+      checkinForm.reset();
+      renderCheckinUI();
+    });
+  }
 
-  renderQueues();
+  if (cancelCheckinBtn) {
+    cancelCheckinBtn.addEventListener('click', () => {
+      const myTicketId = localStorage.getItem(STORAGE_KEYS.MY_TICKET_ID);
+      if (!myTicketId) return;
+
+      let queue = getStoredQueue();
+      queue = queue.filter(item => item.id !== myTicketId);
+
+      localStorage.setItem(STORAGE_KEYS.CHECKIN_QUEUE, JSON.stringify(queue));
+      localStorage.removeItem(STORAGE_KEYS.MY_TICKET_ID);
+
+      renderCheckinUI();
+    });
+  }
 }
 
-function getStoredPatients() {
-  const stored = localStorage.getItem(STORAGE_KEYS.QUEUES);
+function getStoredQueue() {
+  const stored = localStorage.getItem(STORAGE_KEYS.CHECKIN_QUEUE);
   if (!stored) return [];
   try {
     return JSON.parse(stored);
   } catch (e) {
-    console.error('Error reading patient queue from storage:', e);
+    console.error('Error reading checkin queue from storage:', e);
     return [];
   }
 }
 
-function saveStoredPatients(patients) {
-  localStorage.setItem(STORAGE_KEYS.QUEUES, JSON.stringify(patients));
-}
+function renderCheckinUI() {
+  const checkinFormContainer = document.getElementById('checkin-form-container');
+  const activeTicketCard = document.getElementById('active-ticket-card');
+  const queueList = document.getElementById('queue-list');
 
-function dequeuePatient(patientId) {
-  const patients = getStoredPatients().filter(p => p.id !== patientId);
-  saveStoredPatients(patients);
-  renderQueues();
-}
+  const myTicketId = localStorage.getItem(STORAGE_KEYS.MY_TICKET_ID);
+  const queue = getStoredQueue();
 
-function renderQueues() {
-  const scheduledQueueList = document.getElementById('scheduled-queue-list');
-  const walkinQueueList = document.getElementById('walkin-queue-list');
+  const myIndex = queue.findIndex(item => item.id === myTicketId);
 
-  if (!scheduledQueueList || !walkinQueueList) return;
+  if (myIndex !== -1) {
+    const myTicket = queue[myIndex];
+    const position = myIndex + 1;
+    const waitTimeMinutes = (position - 1) * 15;
 
-  const allPatients = getStoredPatients();
+    document.getElementById('ticket-id-display').textContent = `#${myTicket.ticketId}`;
+    document.getElementById('ticket-position-display').textContent = `#${position}`;
+    document.getElementById('ticket-wait-display').textContent = position === 1 ? 'Next in line' : `~${waitTimeMinutes} mins`;
+    document.getElementById('ticket-patient-display').textContent = myTicket.name;
+    document.getElementById('ticket-reason-display').textContent = myTicket.reason;
+    document.getElementById('ticket-time-display').textContent = myTicket.timestamp;
 
-  // Scheduled Appointments queue ordered by appointment time
-  const scheduledPatients = allPatients
-    .filter(p => p.hasAppointment)
-    .sort((a, b) => (a.appointmentTime || '').localeCompare(b.appointmentTime || ''));
-
-  // Walk-ins queue ordered by time of check-in
-  const walkinPatients = allPatients
-    .filter(p => !p.hasAppointment)
-    .sort((a, b) => a.checkInTimestamp - b.checkInTimestamp);
-
-  // Render Scheduled Queue
-  if (scheduledPatients.length === 0) {
-    scheduledQueueList.innerHTML = `<p class="empty-msg">No scheduled appointments in queue.</p>`;
+    checkinFormContainer.classList.add('hidden');
+    activeTicketCard.classList.remove('hidden');
   } else {
-    scheduledQueueList.innerHTML = scheduledPatients.map(p => `
-      <div class="queue-card">
-        <div class="queue-card-info">
-          <span class="patient-name">${escapeHTML(p.name)}</span>
-          <span class="patient-time">📅 Appt Time: ${escapeHTML(formatTimeDisplay(p.appointmentTime))}</span>
-          <span class="patient-time-sub">Checked in: ${escapeHTML(p.checkInTime)}</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="dequeuePatient(${p.id})">Complete</button>
-      </div>
-    `).join('');
+    // If ticket was removed or user doesn't have active ticket
+    localStorage.removeItem(STORAGE_KEYS.MY_TICKET_ID);
+    checkinFormContainer.classList.remove('hidden');
+    activeTicketCard.classList.add('hidden');
   }
 
-  // Render Walk-ins Queue
-  if (walkinPatients.length === 0) {
-    walkinQueueList.innerHTML = `<p class="empty-msg">No walk-ins in queue.</p>`;
-  } else {
-    walkinQueueList.innerHTML = walkinPatients.map(p => `
-      <div class="queue-card">
-        <div class="queue-card-info">
-          <span class="patient-name">${escapeHTML(p.name)}</span>
-          <span class="patient-time">🕒 Checked in: ${escapeHTML(p.checkInTime)}</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="dequeuePatient(${p.id})">Complete</button>
-      </div>
-    `).join('');
-  }
-}
+  // Render Queue List
+  if (!queueList) return;
 
-function formatTimeDisplay(timeStr) {
-  if (!timeStr) return '';
-  const [hours, minutes] = timeStr.split(':');
-  if (hours === undefined || minutes === undefined) return timeStr;
-  const date = new Date();
-  date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (queue.length === 0) {
+    queueList.innerHTML = `<p class="empty-msg">No patients currently in line.</p>`;
+    return;
+  }
+
+  queueList.innerHTML = queue.map((item, index) => {
+    const isMe = item.id === myTicketId;
+    return `
+      <div class="queue-item ${isMe ? 'active-user-item' : ''}">
+        <div class="queue-patient-info">
+          <span class="queue-patient-name">${escapeHTML(item.name)} ${isMe ? '(You)' : ''}</span>
+          <span class="queue-patient-reason">${escapeHTML(item.reason)} — Checked in ${escapeHTML(item.timestamp)}</span>
+        </div>
+        <div class="queue-position-badge">#${index + 1} in line</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* Footer Year */
