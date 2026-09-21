@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initGreeting();
   initCheckin();
   initGuestbook();
+  initQueues();
   initFooterYear();
 });
 
