@@ -248,6 +248,13 @@ main {
   box-shadow: var(--shadow);
 }
 
+/* Features Section Header Actions */
+.features-header-actions {
+  text-align: center;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+}
+
 /* Features Section */
 .features-grid {
   display: grid;
@@ -284,12 +291,85 @@ main {
 }
 
 /* Interactive & Forms */
-.interactive-card, .guestbook-form {
+.interactive-card, .guestbook-form, .checkin-form {
   max-width: 600px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+/* Check-In Queues Section */
+.checkin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.queues-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.queue-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.queue-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--card-border);
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.queue-card {
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.queue-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.patient-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.patient-time {
+  font-size: 0.9rem;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.patient-time-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
 }
 
 .input-group, .form-row {

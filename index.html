@@ -15,6 +15,7 @@
     <nav class="nav-links">
       <a href="#hero">Home</a>
       <a href="#features">Features</a>
+      <a href="#checkin-queues">Queues</a>
       <a href="#interactive">Try It</a>
       <a href="#guestbook">Guestbook</a>
     </nav>
@@ -40,6 +41,9 @@
 
     <section id="features" class="features-section">
       <h2 class="section-title">Features</h2>
+      <div class="features-header-actions">
+        <a href="#checkin-queues" class="btn btn-primary">Check-In Queues</a>
+      </div>
       <p class="section-subtitle">Everything you need to kickstart your web development journey.</p>
 
       <div class="features-grid">
@@ -62,6 +66,49 @@
           <div class="feature-icon">📱</div>
           <h3>Fully Responsive</h3>
           <p>Designed mobile-first with adaptive layouts that look great on screen size of any device.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="checkin-queues" class="checkin-section">
+      <h2 class="section-title">Patient Check-In & Queues</h2>
+      <p class="section-subtitle">Check in for your visit or view current patient status queues.</p>
+
+      <form id="checkin-form" class="checkin-form card">
+        <div class="input-group">
+          <label for="patient-name">Patient Name:</label>
+          <input type="text" id="patient-name" placeholder="e.g. Jane Doe" required maxlength="50">
+        </div>
+
+        <div class="input-group">
+          <label for="appointment-status">Do you have a scheduled appointment?</label>
+          <select id="appointment-status" required>
+            <option value="no">No - Walk-in</option>
+            <option value="yes">Yes - Scheduled Appointment</option>
+          </select>
+        </div>
+
+        <div class="input-group hidden" id="appointment-time-group">
+          <label for="appointment-time">Scheduled Appointment Time:</label>
+          <input type="time" id="appointment-time">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Check In</button>
+      </form>
+
+      <div class="queues-container">
+        <div class="queue-column card">
+          <h3 class="queue-title">Scheduled Appointments</h3>
+          <div id="scheduled-queue-list" class="queue-list">
+            <p class="empty-msg">No scheduled appointments in queue.</p>
+          </div>
+        </div>
+
+        <div class="queue-column card">
+          <h3 class="queue-title">Walk-ins</h3>
+          <div id="walkin-queue-list" class="queue-list">
+            <p class="empty-msg">No walk-ins in queue.</p>
+          </div>
         </div>
       </div>
     </section>
