@@ -19,7 +19,8 @@ const STORAGE_KEYS = {
   CUSTOM_GREETING: 'helloworld_greeting',
   MESSAGES: 'helloworld_guestbook_messages',
   CHECKIN_QUEUE: 'helloworld_checkin_queue',
-  MY_TICKET_ID: 'helloworld_my_ticket_id'
+  MY_TICKET_ID: 'helloworld_my_ticket_id',
+  SERVICE_HISTORY: 'helloworld_service_history'
 };
 
 // Initialize Application
@@ -189,12 +190,14 @@ function initCheckin() {
       const ticketNum = Math.floor(100 + Math.random() * 900);
       const ticketId = `T-${ticketNum}`;
 
+      const now = Date.now();
       const newTicket = {
-        id: Date.now().toString(),
+        id: now.toString(),
         ticketId,
         name,
         phone,
         reason,
+        checkinTimeMs: now,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -223,6 +226,53 @@ function initCheckin() {
   }
 }
 
+function getStoredServiceHistory() {
+  const stored = localStorage.getItem(STORAGE_KEYS.SERVICE_HISTORY);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    console.error('Error reading service history from storage:', e);
+    return [];
+  }
+}
+
+function recordServiceCompleted(checkinTimeMs, serviceTimeMs = Date.now()) {
+  const history = getStoredServiceHistory();
+  const durationMinutes = (serviceTimeMs - checkinTimeMs) / (1000 * 60);
+  history.push({
+    checkinTime: checkinTimeMs,
+    serviceTime: serviceTimeMs,
+    durationMinutes: durationMinutes
+  });
+  localStorage.setItem(STORAGE_KEYS.SERVICE_HISTORY, JSON.stringify(history));
+}
+
+function getAverageServiceTime() {
+  const history = getStoredServiceHistory();
+  const now = Date.now();
+  const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+
+  // Filter history for completed services within the last 7 days
+  const recentHistory = history.filter(record => (now - record.serviceTime) <= oneWeekMs);
+
+  if (recentHistory.length === 0) {
+    // Default average service time if no records exist in the last week (e.g., 12 mins)
+    return 12;
+  }
+
+  const totalDuration = recentHistory.reduce((sum, record) => sum + record.durationMinutes, 0);
+  return totalDuration / recentHistory.length;
+}
+
+function calculateEstimatedWaitTime(peopleAheadCount) {
+  if (peopleAheadCount <= 0) return 0;
+  const avgServiceTime = getAverageServiceTime();
+  // Rolling average from check-in to serviced + 3 mins per person ahead
+  const waitPerPerson = avgServiceTime + 3;
+  return Math.round(waitPerPerson * peopleAheadCount);
+}
+
 function getStoredQueue() {
   const stored = localStorage.getItem(STORAGE_KEYS.CHECKIN_QUEUE);
   if (!stored) return [];
@@ -244,10 +294,18 @@ function renderCheckinUI() {
 
   const myIndex = queue.findIndex(item => item.id === myTicketId);
 
+  const peopleAhead = queue.length;
+  const preArrivalWaitTime = calculateEstimatedWaitTime(peopleAhead);
+  const preArrivalWaitDisplay = document.getElementById('pre-arrival-wait-time');
+  if (preArrivalWaitDisplay) {
+    preArrivalWaitDisplay.textContent = peopleAhead === 0 ? '0 mins (No wait)' : `~${preArrivalWaitTime} mins (${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead)`;
+  }
+
   if (myIndex !== -1) {
     const myTicket = queue[myIndex];
     const position = myIndex + 1;
-    const waitTimeMinutes = (position - 1) * 15;
+    const peopleAheadCount = position - 1;
+    const waitTimeMinutes = calculateEstimatedWaitTime(peopleAheadCount);
 
     document.getElementById('ticket-id-display').textContent = `#${myTicket.ticketId}`;
     document.getElementById('ticket-position-display').textContent = `#${position}`;

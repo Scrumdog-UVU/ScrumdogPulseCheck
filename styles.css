@@ -300,6 +300,21 @@ main {
 }
 
 /* Check-In Section Specifics */
+.pre-arrival-wait-banner {
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.pre-arrival-wait-banner strong {
+  color: var(--accent-color);
+  font-size: 1.05rem;
+}
+
 .active-ticket-card {
   border-left: 4px solid var(--accent-color);
   background: var(--card-bg);
