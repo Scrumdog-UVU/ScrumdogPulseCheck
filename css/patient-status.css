@@ -1,0 +1,109 @@
+/*
+ * =============================================================================
+ * css/patient-status.css - styles for VIEW 2: My Status.
+ * =============================================================================
+ * Only styles for <section id="view-patient-status"> belong here.
+ * Shared things (buttons, inputs, cards) are in css/base.css.
+ */
+
+/* "No one has checked in yet" box. */
+.empty-card {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-secondary);
+}
+
+/* "Viewing as patient" drop-down. */
+.patient-picker {
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
+/* The ticket card itself. */
+.ticket-card {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border-left: 4px solid var(--accent-color);
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-number {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+/* Colored status pill. js/views/patient-status.js adds ONE of the
+   status-waiting / status-called / status-done classes. */
+.status-badge {
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0f172a;
+}
+
+.status-waiting { background-color: var(--status-waiting); }
+.status-called  { background-color: var(--status-called); }
+.status-done    { background-color: var(--status-done); color: #ffffff; }
+
+.status-message {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Position + wait boxes. */
+.ticket-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.ticket-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent-color);
+}
+
+/* Name, reason, etc. */
+.ticket-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+}
+
+.ticket-details strong {
+  color: var(--text-primary);
+}

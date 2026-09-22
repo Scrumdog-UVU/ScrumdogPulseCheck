@@ -1,0 +1,289 @@
+/*
+ * =============================================================================
+ * css/base.css - the shared look used by every view.
+ * =============================================================================
+ * Put styles here ONLY if more than one view uses them (colors, buttons,
+ * cards, form fields, top bar). Styles for a single view go in that view's
+ * own file (css/new-patient.css, css/patient-status.css, css/admin.css).
+ */
+
+/* ---------------------------------------------------------------------------
+ * COLORS AND SHARED VALUES
+ * Change a color here and it changes everywhere. Always use these variables
+ * (e.g. color: var(--text-secondary);) instead of typing a color code.
+ * ------------------------------------------------------------------------- */
+:root {
+  --bg-color: #0f172a;         /* page background */
+  --card-bg: #1e293b;          /* boxes / cards */
+  --card-border: #334155;      /* card outlines and dividers */
+  --text-primary: #f8fafc;     /* main text */
+  --text-secondary: #94a3b8;   /* quieter text (hints, labels) */
+  --accent-color: #6366f1;     /* main brand color (buttons, highlights) */
+  --accent-hover: #4f46e5;     /* brand color when hovered */
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  --topbar-bg: rgba(15, 23, 42, 0.85);
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --danger-color: #ef4444;     /* destructive buttons (cancel, reset) */
+  --danger-hover: #dc2626;
+
+  /* Status colors - used by the patient badge and the staff rows. */
+  --status-waiting: #f59e0b;   /* amber */
+  --status-called: #22c55e;    /* green */
+  --status-done: #64748b;      /* gray */
+
+  --radius: 12px;              /* how rounded card corners are */
+}
+
+/* ---------------------------------------------------------------------------
+ * RESET - removes browser default spacing so every browser looks the same.
+ * ------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Anything with the "hidden" attribute is always hidden, even if another
+   rule says display: flex. The JavaScript relies on this. */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------------------
+ * TOP BAR + VIEW SWITCHER
+ * ------------------------------------------------------------------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--topbar-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.logo-icon {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* The three view buttons, styled as a joined "pill" of tabs. */
+.view-switcher {
+  display: flex;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.25rem;
+}
+
+.view-tab {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.view-tab:hover {
+  color: var(--text-primary);
+}
+
+/* The "active" class is added by showView() in js/app.js. */
+.view-tab.active {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+ * PAGE LAYOUT
+ * ------------------------------------------------------------------------- */
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.view-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.view-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  border-top: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * CARDS - the rounded boxes used throughout the app.
+ * ------------------------------------------------------------------------- */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+/* "Nothing here yet" text inside lists. */
+.empty-msg {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * BUTTONS
+ * Every button gets "btn" plus ONE color class:
+ *   btn-primary   - the main action
+ *   btn-secondary - a less important action
+ *   btn-danger    - something destructive (delete, cancel)
+ * Add "btn-small" for compact buttons (used in the staff rows).
+ * ------------------------------------------------------------------------- */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--card-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-color);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+}
+
+.btn-small {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * FORM FIELDS
+ * ------------------------------------------------------------------------- */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font: inherit;
+  outline: none;
+  color-scheme: dark; /* makes the time picker and drop-down arrows dark too */
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* ---------------------------------------------------------------------------
+ * SMALL SCREENS (phones)
+ * ------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0.75rem 1rem;
+    justify-content: center;
+  }
+
+  .view-tab {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+}
