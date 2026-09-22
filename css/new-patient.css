@@ -1,0 +1,35 @@
+/*
+ * =============================================================================
+ * css/new-patient.css - styles for VIEW 1: New Patient check-in form.
+ * =============================================================================
+ * Only styles for <section id="view-new-patient"> belong here.
+ * Shared things (buttons, inputs, cards) are in css/base.css.
+ */
+
+/* The card holding the check-in form. */
+.form-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Stack the form rows with even spacing. */
+#checkin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* "Current estimated wait for walk-ins" banner above the form. */
+.wait-preview {
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.wait-preview strong {
+  color: var(--text-primary);
+}

@@ -1,189 +1,251 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!--
+  =============================================================================
+  PulseCheck - Clinic Check-In (index.html)
+  =============================================================================
+  This is the ONLY page in the app. Open it by double-clicking it - no server,
+  no install, no build step.
+
+  The page is split into three "views". Only one view is visible at a time.
+  The buttons in the top bar switch between them (see js/app.js):
+
+    1. New Patient    (#view-new-patient)    - a patient checks in
+    2. My Status      (#view-patient-status) - a checked-in patient sees
+                                               their place in line
+    3. Staff View     (#view-admin)          - clinic staff see and manage
+                                               the whole queue
+
+  Because this is a single-user demo, one person can click between all three
+  views to act as the patient AND the staff member.
+
+  RULES FOR EDITING THIS FILE (see AGENTS.md for the full list):
+    - Keep each view inside its own <section class="view"> block.
+    - Do not rename an element's id="..." unless you also update the
+      JavaScript that looks it up (search the js/ folder for the id).
+    - Put styling in the css/ folder, not in style="..." attributes.
+  =============================================================================
+-->
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hello World - Modern Landing Page</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>PulseCheck - Clinic Check-In</title>
+
+  <!-- Stylesheets. base.css first (shared look), then one file per view. -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/new-patient.css">
+  <link rel="stylesheet" href="css/patient-status.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-  <header class="navbar">
+
+  <!-- ===================================================================
+       TOP BAR: app name + the three view-switcher buttons.
+       Each button's data-view="..." must match a VIEWS entry in js/app.js.
+       =================================================================== -->
+  <header class="topbar">
     <div class="logo">
-      <span class="logo-icon">&lt;/&gt;</span>
-      <span class="logo-text">HelloWorld.io</span>
+      <span class="logo-icon">✚</span>
+      <span class="logo-text">PulseCheck</span>
     </div>
-    <nav class="nav-links">
-      <a href="#hero">Home</a>
-      <a href="#features">Features</a>
-      <a href="#checkin">Remote Check-In</a>
-      <a href="#interactive">Try It</a>
-      <a href="#guestbook">Guestbook</a>
+
+    <nav class="view-switcher" aria-label="Choose a view">
+      <button type="button" class="view-tab" data-view="new-patient">New Patient</button>
+      <button type="button" class="view-tab" data-view="patient-status">My Status</button>
+      <button type="button" class="view-tab" data-view="admin">Staff View</button>
     </nav>
-    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
-      <span id="theme-icon">🌙</span>
-    </button>
   </header>
 
   <main>
-    <section id="hero" class="hero-section">
-      <div class="hero-badge">✨ Welcome to the Digital Frontier</div>
-      <h1 class="hero-title">
-        Hello, <span class="gradient-text" id="dynamic-greeting">Scrumdog Team!</span>
-      </h1>
-      <p class="hero-subtitle">
-        A modern, responsive, and lightweight landing page built with vanilla HTML, CSS, and JavaScript. Powered by browser storage.
-      </p>
-      <div class="hero-actions">
-        <a href="#interactive" class="btn btn-primary">Get Started</a>
-        <a href="#features" class="btn btn-secondary">Learn More</a>
-      </div>
-    </section>
 
-    <section id="features" class="features-section">
-      <h2 class="section-title">Features</h2>
-      <div class="features-header-actions">
-        <a href="#checkin-queues" class="btn btn-primary">Check-In Queues</a>
-      </div>
-      <p class="section-subtitle">Everything you need to kickstart your web development journey.</p>
+    <!-- =================================================================
+         VIEW 1: NEW PATIENT
+         A patient fills out this form to check in and get in line.
+         Logic lives in: js/views/new-patient.js
+         Styles live in: css/new-patient.css
+         ================================================================= -->
+    <section id="view-new-patient" class="view" hidden>
+      <h1 class="view-title">Patient Check-In</h1>
+      <p class="view-subtitle">Check in from anywhere and hold your place in line before you arrive.</p>
 
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Lightning Fast</h3>
-          <p>Zero framework overhead. Pure vanilla Web technologies for maximum loading performance.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎨</div>
-          <h3>Theme Able</h3>
-          <p>Seamless toggle between dark and light modes with custom CSS properties and persistent preference.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💾</div>
-          <h3>Browser Storage</h3>
-          <p>Simulated local persistence using <code>localStorage</code> to store user settings and guestbook messages.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📱</div>
-          <h3>Fully Responsive</h3>
-          <p>Designed mobile-first with adaptive layouts that look great on screen size of any device.</p>
-        </div>
-      </div>
-    </section>
+      <div class="card form-card">
+        <!-- Current wait, so the patient knows what to expect before joining. -->
+        <p class="wait-preview">
+          Current estimated wait for walk-ins: <strong id="new-patient-wait-preview">-</strong>
+        </p>
 
-    <section id="checkin" class="checkin-section">
-      <h2 class="section-title">Remote Patient Check-In</h2>
-      <p class="section-subtitle">Check in remotely from anywhere and hold your place in line before you arrive.</p>
-
-      <div id="checkin-form-container" class="card checkin-card">
         <form id="checkin-form">
           <div class="form-row">
             <label for="patient-name">Full Name</label>
-            <input type="text" id="patient-name" placeholder="e.g. Jane Doe" required maxlength="40">
+            <input type="text" id="patient-name" placeholder="e.g. Jane Doe" required maxlength="50">
           </div>
+
           <div class="form-row">
             <label for="patient-phone">Phone Number</label>
             <input type="tel" id="patient-phone" placeholder="e.g. (555) 123-4567" required maxlength="20">
           </div>
+
           <div class="form-row">
             <label for="visit-reason">Reason for Visit</label>
+            <!-- To add a reason, add another <option>. value and text should match. -->
             <select id="visit-reason" required>
               <option value="">Select a reason...</option>
               <option value="General Consultation">General Consultation</option>
-              <option value="Urgent Care">Urgent Care / Acute Illness</option>
+              <option value="Urgent Care / Acute Illness">Urgent Care / Acute Illness</option>
               <option value="Routine Checkup">Routine Checkup</option>
               <option value="Follow-up Visit">Follow-up Visit</option>
               <option value="Vaccination / Lab Work">Vaccination / Lab Work</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">Check In & Hold My Place</button>
+
+          <div class="form-row">
+            <label for="visit-type">Do you have a scheduled appointment?</label>
+            <!-- These values must match VISIT_TYPE in js/storage.js -->
+            <select id="visit-type" required>
+              <option value="walk-in">No - I'm a walk-in</option>
+              <option value="appointment">Yes - I have an appointment</option>
+            </select>
+          </div>
+
+          <!-- Only shown when "Yes - I have an appointment" is picked above. -->
+          <div class="form-row" id="appointment-time-row" hidden>
+            <label for="appointment-time">Appointment Time</label>
+            <input type="time" id="appointment-time">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Check In &amp; Hold My Place</button>
         </form>
       </div>
+    </section>
 
-      <div id="active-ticket-card" class="card active-ticket-card hidden">
-        <div class="ticket-header">
-          <span class="ticket-badge">Active Queue Ticket</span>
-          <span class="ticket-id" id="ticket-id-display">#T-000</span>
+    <!-- =================================================================
+         VIEW 2: MY STATUS ("logged in" patient)
+         Shows one patient's place in line. The drop-down lets you pick
+         which checked-in patient you are pretending to be.
+         Logic lives in: js/views/patient-status.js
+         Styles live in: css/patient-status.css
+         ================================================================= -->
+    <section id="view-patient-status" class="view" hidden>
+      <h1 class="view-title">My Check-In Status</h1>
+      <p class="view-subtitle">See where you are in line and how long you can expect to wait.</p>
+
+      <!-- Shown when nobody has checked in yet. -->
+      <div id="status-empty" class="card empty-card" hidden>
+        <p>No one has checked in yet.</p>
+        <button type="button" class="btn btn-primary" data-go-to-view="new-patient">Go to New Patient Check-In</button>
+      </div>
+
+      <!-- Shown when at least one patient exists. -->
+      <div id="status-content" hidden>
+        <div class="form-row patient-picker">
+          <label for="status-patient-select">Viewing as patient:</label>
+          <select id="status-patient-select"></select>
         </div>
-        <div class="ticket-body">
-          <div class="ticket-stat">
-            <span class="stat-label">Position in Line</span>
-            <span class="stat-value" id="ticket-position-display">1</span>
+
+        <div id="status-ticket" class="card ticket-card">
+          <div class="ticket-header">
+            <span id="status-badge" class="status-badge">Waiting</span>
+            <span id="status-ticket-number" class="ticket-number">#T-000</span>
           </div>
-          <div class="ticket-stat">
-            <span class="stat-label">Estimated Wait Time</span>
-            <span class="stat-value" id="ticket-wait-display">~0 mins</span>
+
+          <!-- A short, friendly message that changes with the status. -->
+          <p id="status-message" class="status-message"></p>
+
+          <!-- Position + wait. Hidden once the patient is called or done. -->
+          <div id="status-stats" class="ticket-stats">
+            <div class="ticket-stat">
+              <span class="stat-label">Position in Line</span>
+              <span class="stat-value" id="status-position">-</span>
+            </div>
+            <div class="ticket-stat">
+              <span class="stat-label">Estimated Wait</span>
+              <span class="stat-value" id="status-wait">-</span>
+            </div>
           </div>
-        </div>
-        <div class="ticket-info">
-          <p><strong>Patient:</strong> <span id="ticket-patient-display"></span></p>
 
-          <p><strong>Reason:</strong> <span id="ticket-reason-display"></span></p>
-          <p><strong>Checked in at:</strong> <span id="ticket-time-display"></span></p>
-        </div>
-        <button id="cancel-checkin-btn" class="btn btn-danger">Cancel Check-In</button>
-      </div>
+          <div class="ticket-details">
+            <p><strong>Patient:</strong> <span id="status-name"></span></p>
+            <p><strong>Reason:</strong> <span id="status-reason"></span></p>
+            <p><strong>Visit type:</strong> <span id="status-visit-type"></span></p>
+            <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>
+          </div>
 
-      <div class="messages-container queue-container">
-        <h3>Live Clinic Queue</h3>
-        <div id="queue-list" class="queue-list">
-          <p class="empty-msg">No patients currently in line.</p>
+          <button type="button" id="status-cancel-btn" class="btn btn-danger">Cancel My Check-In</button>
         </div>
       </div>
     </section>
 
-    <section id="interactive" class="interactive-section">
-      <h2 class="section-title">Customize Greeting</h2>
-      <p class="section-subtitle">Personalize your Hello World experience right in your browser.</p>
+    <!-- =================================================================
+         VIEW 3: STAFF VIEW (admin)
+         Clinic staff see both queues and move patients through them.
+         Logic lives in: js/views/admin.js
+         Styles live in: css/admin.css
+         ================================================================= -->
+    <section id="view-admin" class="view" hidden>
+      <h1 class="view-title">Clinic Queue</h1>
+      <p class="view-subtitle">Call patients in and mark visits complete.</p>
 
-      <div class="card interactive-card">
-        <div class="input-group">
-          <label for="name-input">Your Name or Message:</label>
-          <input type="text" id="name-input" placeholder="e.g. Developer, Universe, Friend..." maxlength="30">
+      <!-- Quick counts at the top of the page. -->
+      <div class="admin-summary">
+        <div class="summary-box">
+          <span class="summary-number" id="admin-count-waiting">0</span>
+          <span class="summary-label">Waiting</span>
         </div>
-        <div class="input-group">
-          <label for="greeting-select">Select Greeting Language:</label>
-          <select id="greeting-select">
-            <option value="Hello">English (Hello)</option>
-            <option value="Hola">Spanish (Hola)</option>
-            <option value="Bonjour">French (Bonjour)</option>
-            <option value="Hallo">German (Hallo)</option>
-            <option value="Ciao">Italian (Ciao)</option>
-            <option value="Konnichiwa">Japanese (Konnichiwa)</option>
-            <option value="Namaste">Hindi (Namaste)</option>
-          </select>
+        <div class="summary-box">
+          <span class="summary-number" id="admin-count-called">0</span>
+          <span class="summary-label">Called In</span>
         </div>
-        <button id="apply-btn" class="btn btn-primary">Apply Custom Greeting</button>
+        <div class="summary-box">
+          <span class="summary-number" id="admin-count-done">0</span>
+          <span class="summary-label">Seen Today</span>
+        </div>
+      </div>
+
+      <!-- The two queues, side by side (stacked on small screens). -->
+      <div class="queue-columns">
+        <div class="card queue-column">
+          <h2 class="queue-title">Scheduled Appointments</h2>
+          <p class="queue-hint">Ordered by appointment time</p>
+          <div id="admin-appointment-list" class="queue-list"></div>
+        </div>
+
+        <div class="card queue-column">
+          <h2 class="queue-title">Walk-ins</h2>
+          <p class="queue-hint">Ordered by check-in time</p>
+          <div id="admin-walkin-list" class="queue-list"></div>
+        </div>
+      </div>
+
+      <!-- Patients whose visits are finished. -->
+      <div class="card finished-card">
+        <h2 class="queue-title">Finished Visits</h2>
+        <div id="admin-finished-list" class="queue-list"></div>
+      </div>
+
+      <!-- Demo helpers. -->
+      <div class="admin-tools">
+        <button type="button" id="admin-clear-finished-btn" class="btn btn-secondary">Clear Finished Visits</button>
+        <button type="button" id="admin-reset-btn" class="btn btn-danger">Reset All Demo Data</button>
       </div>
     </section>
 
-    <section id="guestbook" class="guestbook-section">
-      <h2 class="section-title">Visitor Guestbook</h2>
-      <p class="section-subtitle">Leave a greeting or feedback below. Messages are saved in your browser storage.</p>
-
-      <form id="guestbook-form" class="guestbook-form card">
-        <div class="form-row">
-          <input type="text" id="guest-name" placeholder="Your Name" required maxlength="30">
-        </div>
-        <div class="form-row">
-          <textarea id="guest-message" placeholder="Leave your message here..." required maxlength="200" rows="3"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Sign Guestbook</button>
-      </form>
-
-      <div class="messages-container">
-        <h3>Recent Greetings</h3>
-        <div id="guestbook-list" class="guestbook-list">
-          <p class="empty-msg">No messages yet. Be the first to sign!</p>
-        </div>
-        <button id="clear-messages-btn" class="btn btn-danger hidden">Clear Messages</button>
-      </div>
-    </section>
   </main>
 
   <footer class="footer">
-    <p>&copy; <span id="year"></span> HelloWorld.io — Built with Vanilla HTML, CSS, and JS.</p>
+    <p>PulseCheck demo - all data is saved only in this browser.</p>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- ===================================================================
+       SCRIPTS - the ORDER MATTERS. Later files use things defined in
+       earlier files, so shared code (helpers, storage, queue) loads first
+       and js/app.js (which starts everything) loads LAST.
+       =================================================================== -->
+  <script src="js/helpers.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/queue.js"></script>
+  <script src="js/views/new-patient.js"></script>
+  <script src="js/views/patient-status.js"></script>
+  <script src="js/views/admin.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
