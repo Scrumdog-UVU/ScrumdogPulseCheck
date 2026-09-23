@@ -48,10 +48,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. If the app is open in two browser tabs (e.g. one as the patient, one
   //    as staff), a change in one tab fires a "storage" event in the other.
-  //    Redraw so both tabs stay in sync.
+  //    Redraw so both tabs stay in sync and show live queue position updates.
   window.addEventListener('storage', () => VIEWS[currentViewName].render());
 
-  // 4. Open the view that was open last time (or the default one).
+  // 4. Automatically refresh the current view every 30 seconds so wait-time
+  //    estimates and queue positions stay up to date as time passes.
+  setInterval(() => {
+    VIEWS[currentViewName].render();
+  }, 30000);
+
+  // 5. Open the view that was open last time (or the default one).
   const savedView = getSavedViewName();
   showView(VIEWS[savedView] ? savedView : DEFAULT_VIEW);
 });
