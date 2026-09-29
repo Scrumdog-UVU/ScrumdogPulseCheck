@@ -18,9 +18,15 @@
   --card-border: #334155;      /* card outlines and dividers */
   --text-primary: #f8fafc;     /* main text */
   --text-secondary: #94a3b8;   /* quieter text (hints, labels) */
-  --accent-color: #6366f1;     /* main brand color (buttons, highlights) */
-  --accent-hover: #4f46e5;     /* brand color when hovered */
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+
+  /* Brand Palette - PulseCheck Brand Guide */
+  --accent-color: #3882f6;     /* Primary Blue */
+  --accent-hover: #2563eb;     /* Hover Blue */
+  --accent-teal: #108981;      /* Brand Teal */
+  --accent-navy: #083091;      /* Brand Navy */
+  --accent-mint: #e0f7ef;      /* Brand Light Mint */
+  --accent-gradient: linear-gradient(135deg, #083091 0%, #3882f6 50%, #108981 100%);
+
   --topbar-bg: rgba(15, 23, 42, 0.85);
   --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --input-bg: #0f172a;
@@ -30,10 +36,14 @@
 
   /* Status colors - used by the patient badge and the staff rows. */
   --status-waiting: #f59e0b;   /* amber */
-  --status-called: #22c55e;    /* green */
+  --status-called: #108981;    /* brand teal */
   --status-done: #64748b;      /* gray */
 
   --radius: 12px;              /* how rounded card corners are */
+
+  /* Typography */
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 /* ---------------------------------------------------------------------------
@@ -52,7 +62,11 @@
 }
 
 html {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6, .view-title, .logo, .view-tab, .btn {
+  font-family: var(--font-heading);
 }
 
 body {
@@ -266,7 +280,7 @@ select {
 input:focus,
 select:focus {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(56, 130, 246, 0.2);
 }
 
 /* ---------------------------------------------------------------------------
