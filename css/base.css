@@ -188,6 +188,26 @@ main {
   border-top: 1px solid var(--card-border);
   color: var(--text-secondary);
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.slogan {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-note {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 /* ---------------------------------------------------------------------------
