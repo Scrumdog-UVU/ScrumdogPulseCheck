@@ -58,8 +58,8 @@
   color: #0f172a;
 }
 
-.status-waiting { background-color: var(--status-waiting); }
-.status-called  { background-color: var(--status-called); }
+.status-waiting { background-color: var(--status-waiting); color: #0f172a; }
+.status-called  { background-color: var(--status-called); color: #ffffff; }
 .status-done    { background-color: var(--status-done); color: #ffffff; }
 
 .status-message {
