@@ -111,6 +111,14 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.logo-pulse {
+  color: var(--accent-color);
+}
+
+.logo-check {
+  color: var(--accent-teal);
+}
+
 /* The three view buttons, styled as a joined "pill" of tabs. */
 .view-switcher {
   display: flex;
