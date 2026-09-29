@@ -128,6 +128,7 @@ To add a new view, follow the steps in the header comment of `js/app.js`.
 
 ### CSS
 
+- Do not modify existing CSS unless absolutely necessary for a feature. 
 - Always use the color variables from the top of `css/base.css`
   (`var(--accent-color)`), never raw color codes, except in `base.css` itself.
 - Put a style in `base.css` only if more than one view uses it. Otherwise put
