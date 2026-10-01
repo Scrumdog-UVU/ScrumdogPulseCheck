@@ -28,6 +28,7 @@ PulseCheck is a **clinic check-in and patient queue** demo.
 | **New Patient** (`new-patient`) | A patient | Check-in form. After checking in, the patient is "logged in" and taken to My Status. |
 | **My Status** (`patient-status`) | A checked-in patient | Shows the patient's ticket, place in line, and estimated wait. A drop-down picks which patient you're "logged in" as. |
 | **Staff View** (`admin`) | Clinic staff | Shows both queues. Staff call patients in, mark visits done, or remove patients. |
+| **Survey** (`survey`) | A patient | Simple post-visit satisfaction survey to rate clinic experience and leave comments. |
 
 **Scope:** only patient-care features belong in this app. Do not add
 unrelated demo content (greetings, guestbooks, marketing pages, etc.).
@@ -43,6 +44,7 @@ css/
   new-patient.css           Styles for the New Patient view only.
   patient-status.css        Styles for the My Status view only.
   admin.css                 Styles for the Staff View only.
+  survey.css                Styles for the Survey view only.
 js/
   helpers.js                General tools (escapeHTML, time formatting). No patient logic.
   storage.js                The ONLY file that touches localStorage. Data model lives here.
@@ -51,6 +53,7 @@ js/
     new-patient.js          New Patient view logic.
     patient-status.js       My Status view logic.
     admin.js                Staff View logic.
+    survey.js               Survey view logic.
   app.js                    Starts the app and switches views. Loaded last.
 ```
 

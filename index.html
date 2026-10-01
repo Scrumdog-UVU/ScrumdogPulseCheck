@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="css/new-patient.css">
   <link rel="stylesheet" href="css/patient-status.css">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/survey.css">
 </head>
 <body>
 
@@ -81,6 +82,13 @@
           <line x1="6" y1="20" x2="6" y2="14"></line>
         </svg>
         <span>Staff View</span>
+      </button>
+
+      <button type="button" class="view-tab" data-view="survey">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+        </svg>
+        <span>Survey</span>
       </button>
     </nav>
   </header>
@@ -258,6 +266,70 @@
       </div>
     </section>
 
+    <!-- =================================================================
+         VIEW 4: POST-VISIT SURVEY
+         Patients share feedback and rate their visit experience.
+         Logic lives in: js/views/survey.js
+         Styles live in: css/survey.css
+         ================================================================= -->
+    <section id="view-survey" class="view" hidden>
+      <h1 class="view-title">Post-Visit Survey</h1>
+      <p class="view-subtitle">Tell us about your clinic visit experience and how we can improve.</p>
+
+      <div id="survey-success-banner" class="survey-success-banner" hidden>
+        Thank you for your feedback! Your survey response has been saved.
+      </div>
+
+      <div class="card survey-card">
+        <form id="survey-form">
+          <div class="form-row">
+            <label for="survey-patient-select">Submitting feedback for:</label>
+            <select id="survey-patient-select">
+              <option value="">Anonymous / General Visitor</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Overall Visit Rating</label>
+            <div class="star-rating-group">
+              <label class="star-option">
+                <input type="radio" name="survey-rating" value="5" required checked>
+                <span class="star-label"><span class="star-icon">★</span> 5 - Excellent</span>
+              </label>
+              <label class="star-option">
+                <input type="radio" name="survey-rating" value="4">
+                <span class="star-label"><span class="star-icon">★</span> 4 - Good</span>
+              </label>
+              <label class="star-option">
+                <input type="radio" name="survey-rating" value="3">
+                <span class="star-label"><span class="star-icon">★</span> 3 - Average</span>
+              </label>
+              <label class="star-option">
+                <input type="radio" name="survey-rating" value="2">
+                <span class="star-label"><span class="star-icon">★</span> 2 - Poor</span>
+              </label>
+              <label class="star-option">
+                <input type="radio" name="survey-rating" value="1">
+                <span class="star-label"><span class="star-icon">★</span> 1 - Very Poor</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="survey-comments">Comments / Feedback (optional)</label>
+            <textarea id="survey-comments" placeholder="What went well? How can we make your next visit better?"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit Feedback</button>
+        </form>
+      </div>
+
+      <div class="card surveys-list-card">
+        <h2 class="surveys-list-title">Recent Feedback</h2>
+        <div id="surveys-list-container"></div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer">
@@ -276,6 +348,7 @@
   <script src="js/views/new-patient.js"></script>
   <script src="js/views/patient-status.js"></script>
   <script src="js/views/admin.js"></script>
+  <script src="js/views/survey.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

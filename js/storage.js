@@ -41,7 +41,8 @@
 const STORAGE_KEYS = {
   PATIENTS: 'pulsecheck_patients',                 // the list of all patient records
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
-  CURRENT_VIEW: 'pulsecheck_current_view'           // which view was open last time
+  CURRENT_VIEW: 'pulsecheck_current_view',          // which view was open last time
+  SURVEYS: 'pulsecheck_surveys'                    // post-visit survey responses
 };
 
 /**
@@ -218,6 +219,52 @@ function getSavedViewName() {
 /** @param {string} viewName */
 function saveViewName(viewName) {
   localStorage.setItem(STORAGE_KEYS.CURRENT_VIEW, viewName);
+}
+
+/* ---------------------------------------------------------------------------
+ * READING AND WRITING SURVEYS
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Loads all post-visit survey responses from storage.
+ *
+ * @returns {Array<Object>} A list of survey response objects.
+ */
+function getAllSurveys() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.SURVEYS);
+  if (!savedText) return [];
+
+  try {
+    return JSON.parse(savedText);
+  } catch (error) {
+    console.error('Saved survey data was unreadable, starting fresh.', error);
+    return [];
+  }
+}
+
+/**
+ * Saves a new post-visit survey response.
+ *
+ * @param {Object} details - { patientId, patientName, rating, comments }
+ * @returns {Object} The complete created survey record.
+ */
+function addSurvey(details) {
+  const now = Date.now();
+
+  const newSurvey = {
+    id: `${now}-${Math.random().toString(36).slice(2, 6)}`,
+    patientId: details.patientId || null,
+    patientName: details.patientName || 'Anonymous',
+    rating: Number(details.rating),
+    comments: details.comments || '',
+    createdAt: now
+  };
+
+  const surveys = getAllSurveys();
+  surveys.push(newSurvey);
+  localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(surveys));
+
+  return newSurvey;
 }
 
 /* ---------------------------------------------------------------------------
