@@ -1,0 +1,150 @@
+/*
+ * =============================================================================
+ * css/survey.css - styles for VIEW 4: Post-Visit Survey.
+ * =============================================================================
+ * Only styles for <section id="view-survey"> belong here.
+ * Shared things (buttons, inputs, cards) are in css/base.css.
+ */
+
+/* Container layout for survey form card and submitted responses list */
+.survey-card {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+#survey-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Star rating selector options */
+.star-rating-group {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.star-option {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.star-option input[type="radio"] {
+  display: none;
+}
+
+.star-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.star-icon {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.star-option input[type="radio"]:checked + .star-label {
+  border-color: var(--accent-color);
+  background-color: rgba(56, 130, 246, 0.15);
+  color: var(--text-primary);
+}
+
+.star-option input[type="radio"]:checked + .star-label .star-icon {
+  color: #f59e0b; /* amber star */
+}
+
+/* Form success confirmation banner */
+.survey-success-banner {
+  background-color: rgba(16, 137, 129, 0.15);
+  border: 1px solid var(--accent-teal);
+  color: var(--text-primary);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* Textarea styling */
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 90px;
+}
+
+textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(56, 130, 246, 0.2);
+}
+
+/* Submitted responses section */
+.surveys-list-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.surveys-list-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.survey-item-row {
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.survey-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.survey-item-name {
+  font-weight: 700;
+}
+
+.survey-item-stars {
+  color: #f59e0b;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.survey-item-comments {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  word-break: break-word;
+}
+
+.survey-item-date {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
