@@ -17,8 +17,9 @@ Use the three buttons in the top bar to switch roles:
 3. **Staff View**: see the Scheduled Appointments and Walk-ins queues.
    **Call In** a patient, then **Mark Done** when their visit is over.
 
-Tip: open the app in two browser tabs (one on My Status, one on Staff View)
-to watch the patient's status update live as staff call them in.
+Tip: try the full flow in one sitting. Check a patient in, watch them on
+**My Status**, then switch to **Staff View** to call them in and mark them
+done. Their status changes right away.
 
 All data is saved only in your browser. Use **Reset All Demo Data** in the
 Staff View to start over.
