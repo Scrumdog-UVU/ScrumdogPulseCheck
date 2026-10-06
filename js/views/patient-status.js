@@ -95,6 +95,7 @@ function fillTicket(patient) {
   // Basic details that don't depend on status.
   document.getElementById('status-ticket-number').textContent = `#${patient.ticketNumber}`;
   document.getElementById('status-name').textContent = patient.name;
+  document.getElementById('status-dob').textContent = patient.dob || 'N/A';
   document.getElementById('status-reason').textContent = patient.reason;
   document.getElementById('status-checked-in').textContent = formatClockTime(patient.checkedInAt);
   document.getElementById('status-visit-type').textContent =

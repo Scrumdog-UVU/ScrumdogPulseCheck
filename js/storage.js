@@ -21,6 +21,7 @@
  *     id:              "1695400000000-ab12"   // unique id, never shown to users
  *     ticketNumber:    "T-123"                // short code shown to the patient
  *     name:            "Jane Doe"
+ *     dob:             "1990-05-15"           // date of birth (YYYY-MM-DD)
  *     phone:           "(555) 123-4567"
  *     reason:          "Routine Checkup"      // one of the <option>s in index.html
  *     visitType:       "walk-in"              // VISIT_TYPE.WALK_IN or VISIT_TYPE.APPOINTMENT
@@ -111,7 +112,7 @@ function getPatientById(patientId) {
  * The record starts in the WAITING status.
  *
  * @param {Object} details - What the patient entered on the check-in form:
- *   { name, phone, reason, visitType, appointmentTime }
+ *   { name, dob, phone, reason, visitType, appointmentTime }
  * @returns {Object} The complete new patient record (including its new id).
  */
 function addPatient(details) {
@@ -123,6 +124,7 @@ function addPatient(details) {
     id: `${now}-${Math.random().toString(36).slice(2, 6)}`,
     ticketNumber: createTicketNumber(),
     name: details.name,
+    dob: details.dob || null,
     phone: details.phone,
     reason: details.reason,
     visitType: details.visitType,

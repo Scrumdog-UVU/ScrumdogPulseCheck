@@ -110,6 +110,11 @@
           </div>
 
           <div class="form-row">
+            <label for="patient-dob">Date of Birth</label>
+            <input type="date" id="patient-dob" required>
+          </div>
+
+          <div class="form-row">
             <label for="patient-phone">Phone Number</label>
             <input type="tel" id="patient-phone" placeholder="e.g. (555) 123-4567" required maxlength="20">
           </div>
@@ -194,6 +199,7 @@
 
           <div class="ticket-details">
             <p><strong>Patient:</strong> <span id="status-name"></span></p>
+            <p><strong>Date of Birth:</strong> <span id="status-dob"></span></p>
             <p><strong>Reason:</strong> <span id="status-reason"></span></p>
             <p><strong>Visit type:</strong> <span id="status-visit-type"></span></p>
             <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>

@@ -135,6 +135,10 @@ function buildPatientRow(patient, position) {
     ? `<span class="row-detail">📅 Appointment: ${escapeHTML(formatAppointmentTime(patient.appointmentTime))}</span>`
     : '';
 
+  const dobLine = patient.dob
+    ? ` · 🎂 DOB: ${escapeHTML(patient.dob)}`
+    : '';
+
   // Which buttons to show depends on where the patient is in their visit.
   let buttons = '';
   if (patient.status === PATIENT_STATUS.WAITING) {
@@ -160,7 +164,7 @@ function buildPatientRow(patient, position) {
         </span>
         <span class="row-detail">${escapeHTML(patient.reason)}</span>
         ${appointmentLine}
-        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}</span>
+        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine}</span>
         ${patient.status === PATIENT_STATUS.CALLED ? '<span class="row-called-note">Called in - on their way</span>' : ''}
       </div>
       <div class="row-buttons">${buttons}</div>
