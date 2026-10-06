@@ -58,6 +58,7 @@ function handleCheckIn() {
   // Gather what was typed. .trim() removes extra spaces at the start/end.
   const details = {
     name: document.getElementById('patient-name').value.trim(),
+    dob: document.getElementById('patient-dob').value,
     phone: document.getElementById('patient-phone').value.trim(),
     reason: document.getElementById('visit-reason').value,
     visitType: document.getElementById('visit-type').value,
@@ -66,7 +67,7 @@ function handleCheckIn() {
 
   // The browser already blocks empty "required" fields, but a name of only
   // spaces would get through, so double-check here.
-  if (!details.name || !details.phone || !details.reason) return;
+  if (!details.name || !details.dob || !details.phone || !details.reason) return;
 
   // Save the patient and remember them as the "logged in" patient.
   const newPatient = addPatient(details);

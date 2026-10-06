@@ -148,6 +148,7 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `id` | `"1695400000000-ab12"` | Unique. Never shown to users. |
 | `ticketNumber` | `"T-123"` | Short code shown to the patient. |
 | `name` | `"Jane Doe"` | |
+| `dob` | `"1990-05-15"` | Date of birth (`YYYY-MM-DD`). |
 | `phone` | `"(555) 123-4567"` | |
 | `reason` | `"Routine Checkup"` | Matches an `<option>` in the check-in form. |
 | `visitType` | `"walk-in"` | `VISIT_TYPE.WALK_IN` or `VISIT_TYPE.APPOINTMENT`. |
