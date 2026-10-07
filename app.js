@@ -1,7 +1,6 @@
 // DOM Elements
 const htmlElement = document.documentElement;
-const themeToggleBtn = document.getElementById('theme-toggle');
-const themeIcon = document.getElementById('theme-icon');
+const themeToggleInput = document.getElementById('theme-toggle');
 const dynamicGreeting = document.getElementById('dynamic-greeting');
 const nameInput = document.getElementById('name-input');
 const greetingSelect = document.getElementById('greeting-select');
@@ -28,25 +27,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initGreeting();
   initCheckin();
   initGuestbook();
-  initQueues();
   initFooterYear();
 });
 
 /* Theme Handling */
 function initTheme() {
-  const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
-  setTheme(savedTheme);
+  const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+  const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const defaultTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
 
-  themeToggleBtn.addEventListener('click', () => {
-    const currentTheme = htmlElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-  });
+  setTheme(defaultTheme);
+
+  if (themeToggleInput) {
+    themeToggleInput.addEventListener('change', () => {
+      const newTheme = themeToggleInput.checked ? 'dark' : 'light';
+      setTheme(newTheme);
+    });
+  }
 }
 
 function setTheme(theme) {
   htmlElement.setAttribute('data-theme', theme);
-  themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+  if (themeToggleInput) {
+    themeToggleInput.checked = (theme === 'dark');
+  }
   localStorage.setItem(STORAGE_KEYS.THEME, theme);
 }
 

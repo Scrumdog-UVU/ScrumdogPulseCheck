@@ -19,9 +19,14 @@
       <a href="#interactive">Try It</a>
       <a href="#guestbook">Guestbook</a>
     </nav>
-    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
-      <span id="theme-icon">🌙</span>
-    </button>
+    <div class="theme-toggle-wrapper">
+      <span class="theme-icon-label" aria-hidden="true">☀️</span>
+      <label class="theme-switch" for="theme-toggle" title="Toggle Light/Dark Mode">
+        <input type="checkbox" id="theme-toggle" aria-label="Toggle Light and Dark Mode">
+        <span class="theme-slider"></span>
+      </label>
+      <span class="theme-icon-label" aria-hidden="true">🌙</span>
+    </div>
   </header>
 
   <main>
