@@ -102,6 +102,9 @@ function fillTicket(patient) {
     patient.visitType === VISIT_TYPE.APPOINTMENT
       ? `Appointment at ${formatAppointmentTime(patient.appointmentTime)}`
       : 'Walk-in';
+  document.getElementById('status-messaging-consent').textContent = patient.messagingConsent
+    ? 'Opted in (SMS / Push enabled)'
+    : 'Opted out (No SMS / Push)';
 
   // The parts below change depending on the patient's status.
   const badge = document.getElementById('status-badge');

@@ -62,7 +62,8 @@ function handleCheckIn() {
     phone: document.getElementById('patient-phone').value.trim(),
     reason: document.getElementById('visit-reason').value,
     visitType: document.getElementById('visit-type').value,
-    appointmentTime: document.getElementById('appointment-time').value
+    appointmentTime: document.getElementById('appointment-time').value,
+    messagingConsent: document.getElementById('patient-messaging-consent').checked
   };
 
   // The browser already blocks empty "required" fields, but a name of only

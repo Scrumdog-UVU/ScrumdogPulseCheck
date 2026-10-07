@@ -155,6 +155,13 @@
             <input type="time" id="appointment-time">
           </div>
 
+          <div class="form-row form-row-checkbox">
+            <label class="checkbox-label" for="patient-messaging-consent">
+              <input type="checkbox" id="patient-messaging-consent">
+              <span>I consent to receive SMS or push notification updates about my visit status from the clinic.</span>
+            </label>
+          </div>
+
           <button type="submit" class="btn btn-primary">Check In &amp; Hold My Place</button>
         </form>
       </div>
@@ -210,6 +217,7 @@
             <p><strong>Date of Birth:</strong> <span id="status-dob"></span></p>
             <p><strong>Reason:</strong> <span id="status-reason"></span></p>
             <p><strong>Visit type:</strong> <span id="status-visit-type"></span></p>
+            <p><strong>Notifications:</strong> <span id="status-messaging-consent"></span></p>
             <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>
           </div>
 

@@ -26,6 +26,7 @@
  *     reason:          "Routine Checkup"      // one of the <option>s in index.html
  *     visitType:       "walk-in"              // VISIT_TYPE.WALK_IN or VISIT_TYPE.APPOINTMENT
  *     appointmentTime: "14:30" or null        // only set for appointments (24-hour "HH:MM")
+ *     messagingConsent: false                 // true if explicit consent given for SMS/push messages
  *     checkedInAt:     1695400000000          // Date.now() when they checked in
  *     status:          "waiting"              // one of PATIENT_STATUS below
  *   }
@@ -113,7 +114,7 @@ function getPatientById(patientId) {
  * The record starts in the WAITING status.
  *
  * @param {Object} details - What the patient entered on the check-in form:
- *   { name, dob, phone, reason, visitType, appointmentTime }
+ *   { name, dob, phone, reason, visitType, appointmentTime, messagingConsent }
  * @returns {Object} The complete new patient record (including its new id).
  */
 function addPatient(details) {
@@ -130,6 +131,7 @@ function addPatient(details) {
     reason: details.reason,
     visitType: details.visitType,
     appointmentTime: details.visitType === VISIT_TYPE.APPOINTMENT ? details.appointmentTime : null,
+    messagingConsent: Boolean(details.messagingConsent),
     checkedInAt: now,
     status: PATIENT_STATUS.WAITING
   };
