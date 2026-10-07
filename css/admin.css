@@ -131,6 +131,20 @@
   color: var(--status-called);
 }
 
+/* Consent status badges in Staff View patient rows */
+.consent-tag {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.consent-yes {
+  color: #34d399; /* light green */
+}
+
+.consent-no {
+  color: var(--text-secondary);
+}
+
 .row-buttons {
   display: flex;
   flex-direction: column;

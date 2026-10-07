@@ -139,6 +139,10 @@ function buildPatientRow(patient, position) {
     ? ` · 🎂 DOB: ${escapeHTML(patient.dob)}`
     : '';
 
+  const consentBadge = patient.messagingConsent
+    ? '<span class="consent-tag consent-yes">📱 SMS/Push Opted In</span>'
+    : '<span class="consent-tag consent-no">📵 SMS/Push Opted Out</span>';
+
   // Which buttons to show depends on where the patient is in their visit.
   let buttons = '';
   if (patient.status === PATIENT_STATUS.WAITING) {
@@ -164,7 +168,7 @@ function buildPatientRow(patient, position) {
         </span>
         <span class="row-detail">${escapeHTML(patient.reason)}</span>
         ${appointmentLine}
-        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine}</span>
+        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine} · ${consentBadge}</span>
         ${patient.status === PATIENT_STATUS.CALLED ? '<span class="row-called-note">Called in - on their way</span>' : ''}
       </div>
       <div class="row-buttons">${buttons}</div>
