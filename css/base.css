@@ -46,6 +46,26 @@
   --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* Light Mode theme overrides when [data-theme="light"] is set on <html> */
+[data-theme="light"] {
+  --bg-color: #f1f5f9;         /* light gray page background */
+  --card-bg: #ffffff;          /* clean white cards */
+  --card-border: #cbd5e1;      /* subtle card borders */
+  --text-primary: #0f172a;     /* dark slate text */
+  --text-secondary: #64748b;   /* slate secondary text */
+
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color-scheme: light;
+}
+
 /* ---------------------------------------------------------------------------
  * RESET - removes browser default spacing so every browser looks the same.
  * ------------------------------------------------------------------------- */
@@ -156,6 +176,36 @@ body {
 .view-tab.active {
   background-color: var(--accent-color);
   color: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+ * THEME TOGGLE SWITCH
+ * ------------------------------------------------------------------------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-color);
+}
+
+.theme-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
 }
 
 /* ---------------------------------------------------------------------------

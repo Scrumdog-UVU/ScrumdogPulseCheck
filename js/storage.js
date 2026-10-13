@@ -44,7 +44,8 @@ const STORAGE_KEYS = {
   PATIENTS: 'pulsecheck_patients',                 // the list of all patient records
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
   CURRENT_VIEW: 'pulsecheck_current_view',          // which view was open last time
-  SURVEYS: 'pulsecheck_surveys'                    // post-visit survey responses
+  SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
+  THEME: 'pulsecheck_theme'                        // user theme choice: "light" or "dark"
 };
 
 /**
@@ -223,6 +224,20 @@ function getSavedViewName() {
 /** @param {string} viewName */
 function saveViewName(viewName) {
   localStorage.setItem(STORAGE_KEYS.CURRENT_VIEW, viewName);
+}
+
+/* ---------------------------------------------------------------------------
+ * THEME PREFERENCE - light mode vs dark mode
+ * ------------------------------------------------------------------------- */
+
+/** @returns {string|null} The saved theme choice ("light" or "dark"). */
+function getSavedTheme() {
+  return localStorage.getItem(STORAGE_KEYS.THEME);
+}
+
+/** @param {string} theme - "light" or "dark" */
+function saveTheme(theme) {
+  localStorage.setItem(STORAGE_KEYS.THEME, theme);
 }
 
 /* ---------------------------------------------------------------------------

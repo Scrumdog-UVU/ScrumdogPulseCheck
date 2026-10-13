@@ -36,6 +36,9 @@ let currentViewName = DEFAULT_VIEW;
  * START-UP - runs once, as soon as the page has loaded.
  * ------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
+  // 0. Initialize theme (Light Mode / Dark Mode) preference.
+  initTheme();
+
   // 1. Let every view connect its buttons and forms.
   Object.values(VIEWS).forEach((view) => view.init());
 
@@ -62,6 +65,58 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedView = getSavedViewName();
   showView(VIEWS[savedView] ? savedView : DEFAULT_VIEW);
 });
+
+/* ---------------------------------------------------------------------------
+ * THEME MANAGEMENT - Light mode / Dark mode switch
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Initializes the theme state on page load and hooks up the toggle button.
+ */
+function initTheme() {
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (!toggleBtn) return;
+
+  // Load saved theme or default to dark
+  const savedTheme = getSavedTheme() || 'dark';
+  applyTheme(savedTheme);
+
+  toggleBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+    saveTheme(newTheme);
+  });
+}
+
+/**
+ * Applies the requested theme to the page and updates toggle button UI.
+ *
+ * @param {string} theme - "light" or "dark"
+ */
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+
+  const toggleText = document.getElementById('theme-toggle-text');
+  const sunIcon = document.querySelector('.theme-icon-sun');
+  const moonIcon = document.querySelector('.theme-icon-moon');
+
+  if (toggleText && sunIcon && moonIcon) {
+    if (theme === 'light') {
+      toggleText.textContent = 'Dark Mode';
+      sunIcon.hidden = true;
+      moonIcon.hidden = false;
+    } else {
+      toggleText.textContent = 'Light Mode';
+      sunIcon.hidden = false;
+      moonIcon.hidden = true;
+    }
+  }
+}
 
 /**
  * Hides every view, shows the chosen one, and redraws it with fresh data.
