@@ -6,7 +6,7 @@
   This is the ONLY page in the app. Open it by double-clicking it - no server,
   no install, no build step.
 
-  The page is split into three "views". Only one view is visible at a time.
+  The page is split into "views". Only one view is visible at a time.
   The buttons in the top bar switch between them (see js/app.js):
 
     1. New Patient    (#view-new-patient)    - a patient checks in
@@ -14,6 +14,9 @@
                                                their place in line
     3. Staff View     (#view-admin)          - clinic staff see and manage
                                                the whole queue
+    4. Survey         (#view-survey)         - a patient rates their visit
+    5. Dashboard      (#view-dashboard)      - a live, read-only queue
+                                               dashboard for front-desk staff
 
   Because this is a single-user demo, one person can click between all three
   views to act as the patient AND the staff member.
@@ -42,11 +45,12 @@
   <link rel="stylesheet" href="css/patient-status.css">
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/survey.css">
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
   <!-- ===================================================================
-       TOP BAR: app name + the three view-switcher buttons.
+       TOP BAR: app name + the view-switcher buttons.
        Each button's data-view="..." must match a VIEWS entry in js/app.js.
        =================================================================== -->
   <header class="topbar">
@@ -89,6 +93,17 @@
           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
         </svg>
         <span>Survey</span>
+      </button>
+
+      <button type="button" class="view-tab" data-view="dashboard">
+        <!-- A screen with a heartbeat line on it. -->
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+          <polyline points="6 10 9 10 10.5 7 13 13 14.5 10 18 10" stroke="var(--accent-teal)"></polyline>
+        </svg>
+        <span>Dashboard</span>
       </button>
     </nav>
 
@@ -365,6 +380,83 @@
       </div>
     </section>
 
+    <!-- =================================================================
+         VIEW 5: DASHBOARD (live queue dashboard for front-desk staff)
+         A read-only, at-a-glance picture of both queues that redraws
+         itself automatically. Staff manage patients in the Staff View.
+         Logic lives in: js/views/dashboard.js
+         Styles live in: css/dashboard.css
+         ================================================================= -->
+    <section id="view-dashboard" class="view" hidden>
+      <h1 class="view-title">Live Queue Dashboard</h1>
+      <p class="view-subtitle">The whole front desk at a glance. This page updates on its own.</p>
+
+      <!-- "Live" badge + the time the dashboard last redrew itself. -->
+      <div class="dashboard-live-bar">
+        <span class="dashboard-live-indicator"><span class="dashboard-live-dot"></span>Live</span>
+        <span>Last updated <strong id="dashboard-updated-time">-</strong></span>
+      </div>
+
+      <!-- Headline numbers. -->
+      <div class="dashboard-stats">
+        <div class="dashboard-stat">
+          <span class="dashboard-stat-number" id="dashboard-count-waiting">0</span>
+          <span class="dashboard-stat-label">Waiting</span>
+        </div>
+        <div class="dashboard-stat">
+          <span class="dashboard-stat-number" id="dashboard-count-called">0</span>
+          <span class="dashboard-stat-label">Called In</span>
+        </div>
+        <div class="dashboard-stat">
+          <span class="dashboard-stat-number" id="dashboard-count-done">0</span>
+          <span class="dashboard-stat-label">Seen Today</span>
+        </div>
+        <div class="dashboard-stat">
+          <span class="dashboard-stat-number" id="dashboard-walkin-wait">-</span>
+          <span class="dashboard-stat-label">New Walk-in Wait</span>
+        </div>
+        <!-- Turns red, with a written warning, when someone has waited too long. -->
+        <div class="dashboard-stat" id="dashboard-longest-wait-box">
+          <span class="dashboard-stat-number" id="dashboard-longest-wait">-</span>
+          <span class="dashboard-stat-label">Longest Wait</span>
+          <span class="dashboard-stat-note" id="dashboard-longest-wait-note" hidden></span>
+        </div>
+      </div>
+
+      <!-- Patients who have been called to the front desk. -->
+      <div class="card dashboard-now-serving">
+        <h2 class="dashboard-card-title">Now Serving</h2>
+        <p class="dashboard-card-hint">Called in and on their way to the front desk</p>
+        <div id="dashboard-now-serving-list" class="dashboard-serving-list"></div>
+      </div>
+
+      <!-- The two queues, side by side (stacked on small screens). -->
+      <div class="dashboard-queues">
+        <div class="card dashboard-queue">
+          <div class="dashboard-queue-header">
+            <h2 class="dashboard-card-title">Scheduled Appointments</h2>
+            <span class="dashboard-queue-count" id="dashboard-appointment-count">0 in line</span>
+          </div>
+          <p class="dashboard-card-hint">Ordered by appointment time</p>
+          <div id="dashboard-appointment-list" class="dashboard-list"></div>
+        </div>
+
+        <div class="card dashboard-queue">
+          <div class="dashboard-queue-header">
+            <h2 class="dashboard-card-title">Walk-ins</h2>
+            <span class="dashboard-queue-count" id="dashboard-walkin-count">0 in line</span>
+          </div>
+          <p class="dashboard-card-hint">Ordered by check-in time</p>
+          <div id="dashboard-walkin-list" class="dashboard-list"></div>
+        </div>
+      </div>
+
+      <!-- This view is read-only. Staff call patients in from the Staff View. -->
+      <div class="dashboard-tools">
+        <button type="button" class="btn btn-secondary" data-go-to-view="admin">Manage Patients in Staff View</button>
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer">
@@ -384,6 +476,7 @@
   <script src="js/views/patient-status.js"></script>
   <script src="js/views/admin.js"></script>
   <script src="js/views/survey.js"></script>
+  <script src="js/views/dashboard.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
