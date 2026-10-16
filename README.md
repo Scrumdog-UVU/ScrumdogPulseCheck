@@ -9,13 +9,17 @@ Double-click `index.html`. That's it. There's nothing to install.
 
 ## How to use it
 
-Use the three buttons in the top bar to switch roles:
+Use the buttons in the top bar to switch roles:
 
 1. **New Patient**: fill in the form to check in. You'll be taken to My Status.
 2. **My Status**: see your ticket, place in line, and estimated wait. Use the
    "Viewing as patient" drop-down to switch between checked-in patients.
 3. **Staff View**: see the Scheduled Appointments and Walk-ins queues.
    **Call In** a patient, then **Mark Done** when their visit is over.
+4. **Dashboard**: a live, read-only overview for front-desk staff. It shows
+   who has been called in, both queues in order, and how long each patient
+   has been waiting. Open it in a second browser tab and it updates the
+   moment you check someone in or call them from the first tab.
 
 Tip: try the full flow in one sitting. Check a patient in, watch them on
 **My Status**, then switch to **Staff View** to call them in and mark them

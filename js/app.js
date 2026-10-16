@@ -23,7 +23,8 @@ const VIEWS = {
   'new-patient':    { init: initNewPatientView,    render: renderNewPatientView },
   'patient-status': { init: initPatientStatusView, render: renderPatientStatusView },
   'admin':          { init: initAdminView,         render: renderAdminView },
-  'survey':         { init: initSurveyView,        render: renderSurveyView }
+  'survey':         { init: initSurveyView,        render: renderSurveyView },
+  'dashboard':      { init: initDashboardView,     render: renderDashboardView }
 };
 
 /** The view shown the very first time someone opens the app. */
