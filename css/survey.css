@@ -18,6 +18,20 @@
   gap: 1.25rem;
 }
 
+/* Fieldset and Legend styling for rating accessibility */
+.rating-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rating-fieldset legend {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
 /* Star rating selector options */
 .star-rating-group {
   display: flex;
@@ -25,7 +39,6 @@
   justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
-  margin-top: 0.25rem;
 }
 
 .star-option {
@@ -33,10 +46,24 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
+  position: relative;
 }
 
+/* Visually hidden radio input that remains accessible to screen readers and keyboard focus */
 .star-option input[type="radio"] {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.star-option input[type="radio"]:focus-visible + .star-label {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .star-label {
