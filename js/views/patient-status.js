@@ -139,5 +139,11 @@ function fillTicket(patient) {
     message.textContent = 'Thanks for visiting! Your visit is finished.';
     stats.hidden = true;
     cancelButton.hidden = true;
+
+  } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
+    badge.textContent = 'No-Show';
+    message.textContent = 'You were marked as a no-show. Please speak to the front desk if you need assistance.';
+    stats.hidden = true;
+    cancelButton.hidden = true;
   }
 }
