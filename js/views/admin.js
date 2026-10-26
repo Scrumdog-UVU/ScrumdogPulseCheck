@@ -39,6 +39,29 @@ function initAdminView() {
     handleAdminAction(button.dataset.action, button.dataset.patientId);
   });
 
+  const searchInput = document.getElementById('admin-search-input');
+  const clearBtn = document.getElementById('admin-search-clear-btn');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      if (clearBtn) {
+        clearBtn.hidden = searchInput.value.trim().length === 0;
+      }
+      renderAdminView();
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      clearBtn.hidden = true;
+      renderAdminView();
+    });
+  }
+
   document.getElementById('admin-clear-finished-btn').addEventListener('click', () => {
     removeFinishedPatients();
     renderAdminView();
@@ -85,39 +108,89 @@ function renderAdminView() {
   document.getElementById('admin-count-called').textContent = countWithStatus(PATIENT_STATUS.CALLED);
   document.getElementById('admin-count-done').textContent = countWithStatus(PATIENT_STATUS.DONE);
 
+  // --- Search Query ---------------------------------------------------
+  const searchInput = document.getElementById('admin-search-input');
+  const clearBtn = document.getElementById('admin-search-clear-btn');
+  const rawQuery = searchInput ? searchInput.value.trim() : '';
+  const query = rawQuery.toLowerCase();
+
+  if (clearBtn) {
+    clearBtn.hidden = rawQuery.length === 0;
+  }
+
   // --- The two queues --------------------------------------------------
+  const appointmentQueueItems = getQueue(VISIT_TYPE.APPOINTMENT).map((patient, index) => ({
+    patient,
+    position: index + 1
+  }));
+  const filteredAppointments = appointmentQueueItems.filter((item) => matchesSearch(item.patient, query));
+  const appointmentEmptyText = rawQuery
+    ? `No scheduled appointments matching "${rawQuery}".`
+    : 'No scheduled appointments in line.';
   fillQueueList(
     document.getElementById('admin-appointment-list'),
-    getQueue(VISIT_TYPE.APPOINTMENT),
-    'No scheduled appointments in line.'
+    filteredAppointments,
+    appointmentEmptyText
   );
+
+  const walkinQueueItems = getQueue(VISIT_TYPE.WALK_IN).map((patient, index) => ({
+    patient,
+    position: index + 1
+  }));
+  const filteredWalkins = walkinQueueItems.filter((item) => matchesSearch(item.patient, query));
+  const walkinEmptyText = rawQuery
+    ? `No walk-ins matching "${rawQuery}".`
+    : 'No walk-ins in line.';
   fillQueueList(
     document.getElementById('admin-walkin-list'),
-    getQueue(VISIT_TYPE.WALK_IN),
-    'No walk-ins in line.'
+    filteredWalkins,
+    walkinEmptyText
   );
 
   // --- Finished visits (most recent check-in first) ---------------------
-  const finished = allPatients
+  const finishedQueueItems = allPatients
     .filter((patient) => patient.status === PATIENT_STATUS.DONE)
-    .sort((a, b) => b.checkedInAt - a.checkedInAt);
-  fillQueueList(document.getElementById('admin-finished-list'), finished, 'No finished visits yet.');
+    .sort((a, b) => b.checkedInAt - a.checkedInAt)
+    .map((patient) => ({ patient, position: 0 }));
+  const filteredFinished = finishedQueueItems.filter((item) => matchesSearch(item.patient, query));
+  const finishedEmptyText = rawQuery
+    ? `No finished visits matching "${rawQuery}".`
+    : 'No finished visits yet.';
+  fillQueueList(
+    document.getElementById('admin-finished-list'),
+    filteredFinished,
+    finishedEmptyText
+  );
+}
+
+/**
+ * Checks whether a patient record matches the search query by name or phone number.
+ *
+ * @param {Object} patient - The patient record.
+ * @param {string} query - Cleaned lower-case search query.
+ * @returns {boolean} True if the patient matches or query is empty.
+ */
+function matchesSearch(patient, query) {
+  if (!query) return true;
+  const name = (patient.name || '').toLowerCase();
+  const phone = (patient.phone || '').toLowerCase();
+  return name.includes(query) || phone.includes(query);
 }
 
 /**
  * Puts a list of patient rows into one of the queue boxes.
  *
  * @param {HTMLElement} listElement - The box to fill.
- * @param {Array<Object>} patients - Patients to show, already in order.
+ * @param {Array<{patient: Object, position: number}>} items - Patient items to show, with preserved position numbers.
  * @param {string} emptyText - What to show if the list is empty.
  */
-function fillQueueList(listElement, patients, emptyText) {
-  if (patients.length === 0) {
+function fillQueueList(listElement, items, emptyText) {
+  if (items.length === 0) {
     listElement.innerHTML = `<p class="empty-msg">${escapeHTML(emptyText)}</p>`;
     return;
   }
 
-  listElement.innerHTML = patients.map((patient, index) => buildPatientRow(patient, index + 1)).join('');
+  listElement.innerHTML = items.map((item) => buildPatientRow(item.patient, item.position)).join('');
 }
 
 /**

@@ -38,6 +38,32 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * PATIENT SEARCH BAR
+ * ------------------------------------------------------------------------- */
+.admin-search-card {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.search-input-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.search-input-wrapper input[type="search"] {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------------------
  * THE TWO QUEUES
  * Side by side on wide screens; auto-fit stacks them on narrow screens.
  * ------------------------------------------------------------------------- */
