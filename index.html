@@ -107,6 +107,17 @@
       </button>
     </nav>
 
+    <!-- User Role Selector dropdown for Role-Based Access Control -->
+    <div class="role-selector-wrapper">
+      <label for="app-role-select" class="role-select-label">Role:</label>
+      <select id="app-role-select" class="role-select" aria-label="Select user role">
+        <option value="admin">Clinic Administration</option>
+        <option value="provider">Provider</option>
+        <option value="front_desk">Front Desk Staff</option>
+        <option value="patient">Patient</option>
+      </select>
+    </div>
+
     <!-- Theme switcher toggle button (Light / Dark mode) -->
     <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light and dark mode">
       <!-- Sun icon for switching to light mode / active light mode -->
@@ -332,6 +343,13 @@
       <div class="card noshow-card">
         <h2 class="queue-title">No-Show Patients</h2>
         <div id="admin-noshow-list" class="queue-list"></div>
+      </div>
+
+      <!-- Role-Based Access Control (RBAC) Permissions Management Card -->
+      <div id="admin-permissions-card" class="card rbac-card" hidden>
+        <h2 class="queue-title">Role-Based Access Control &amp; Permissions</h2>
+        <p class="queue-hint">Grant or restrict capabilities for staff and patient roles across the clinic.</p>
+        <div id="admin-permissions-matrix-container" class="rbac-matrix-container"></div>
       </div>
 
       <!-- Demo helpers. -->

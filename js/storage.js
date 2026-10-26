@@ -46,7 +46,76 @@ const STORAGE_KEYS = {
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
   CURRENT_VIEW: 'pulsecheck_current_view',          // which view was open last time
   SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
-  THEME: 'pulsecheck_theme'                        // user theme choice: "light" or "dark"
+  THEME: 'pulsecheck_theme',                       // user theme choice: "light" or "dark"
+  CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
+  ROLE_PERMISSIONS: 'pulsecheck_role_permissions'  // matrix of role-based permissions
+};
+
+/**
+ * Roles available in the system for Role-Based Access Control (RBAC).
+ */
+const USER_ROLES = {
+  ADMIN: 'admin',           // Clinic Administration
+  PROVIDER: 'provider',     // Clinician / Provider
+  FRONT_DESK: 'front_desk', // Front Desk Staff
+  PATIENT: 'patient'        // Patient
+};
+
+/**
+ * Human-readable role names for display in the UI.
+ */
+const ROLE_LABELS = {
+  [USER_ROLES.ADMIN]: 'Clinic Administration',
+  [USER_ROLES.PROVIDER]: 'Provider',
+  [USER_ROLES.FRONT_DESK]: 'Front Desk Staff',
+  [USER_ROLES.PATIENT]: 'Patient'
+};
+
+/**
+ * Default permissions configuration for each role.
+ * Permissions dictate view visibility and functional capabilities across the app.
+ */
+const DEFAULT_ROLE_PERMISSIONS = {
+  [USER_ROLES.ADMIN]: {
+    canViewAdmin: true,
+    canViewDashboard: true,
+    canViewPatientStatus: true,
+    canViewNewPatient: true,
+    canViewSurvey: true,
+    canManageQueue: true,
+    canManageRoles: true,
+    canResetData: true
+  },
+  [USER_ROLES.PROVIDER]: {
+    canViewAdmin: true,
+    canViewDashboard: true,
+    canViewPatientStatus: true,
+    canViewNewPatient: true,
+    canViewSurvey: true,
+    canManageQueue: true,
+    canManageRoles: false,
+    canResetData: false
+  },
+  [USER_ROLES.FRONT_DESK]: {
+    canViewAdmin: true,
+    canViewDashboard: true,
+    canViewPatientStatus: true,
+    canViewNewPatient: true,
+    canViewSurvey: true,
+    canManageQueue: true,
+    canManageRoles: false,
+    canResetData: false
+  },
+  [USER_ROLES.PATIENT]: {
+    canViewAdmin: false,
+    canViewDashboard: false,
+    canViewPatientStatus: true,
+    canViewNewPatient: true,
+    canViewSurvey: true,
+    canManageQueue: false,
+    canManageRoles: false,
+    canResetData: false
+  }
 };
 
 /**
@@ -288,6 +357,99 @@ function addSurvey(details) {
   localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(surveys));
 
   return newSurvey;
+}
+
+/* ---------------------------------------------------------------------------
+ * ROLE-BASED ACCESS CONTROL (RBAC) & PERMISSIONS
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Gets the current active role from localStorage.
+ * Defaults to Clinic Administration ('admin') so initial load has full access.
+ *
+ * @returns {string} The active role string.
+ */
+function getCurrentRole() {
+  const savedRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
+  if (savedRole && Object.values(USER_ROLES).includes(savedRole)) {
+    return savedRole;
+  }
+  return USER_ROLES.ADMIN;
+}
+
+/**
+ * Sets the active user role in localStorage.
+ *
+ * @param {string} role - The role string from USER_ROLES.
+ */
+function setCurrentRole(role) {
+  if (Object.values(USER_ROLES).includes(role)) {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, role);
+  }
+}
+
+/**
+ * Loads the current matrix of permissions for all roles.
+ * Falls back to DEFAULT_ROLE_PERMISSIONS if none saved or invalid.
+ *
+ * @returns {Object} Object mapping role keys to permission objects.
+ */
+function getRolePermissions() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.ROLE_PERMISSIONS);
+  if (!savedText) return DEFAULT_ROLE_PERMISSIONS;
+
+  try {
+    const parsed = JSON.parse(savedText);
+    // Ensure all roles and expected permissions are present by merging defaults
+    const permissions = {};
+    Object.values(USER_ROLES).forEach((role) => {
+      permissions[role] = {
+        ...DEFAULT_ROLE_PERMISSIONS[role],
+        ...(parsed[role] || {})
+      };
+    });
+    return permissions;
+  } catch (error) {
+    console.error('Saved role permissions were unreadable, using defaults.', error);
+    return DEFAULT_ROLE_PERMISSIONS;
+  }
+}
+
+/**
+ * Saves the full role permissions matrix to localStorage.
+ *
+ * @param {Object} permissionsMatrix - Matrix mapping roles to permission flags.
+ */
+function saveRolePermissions(permissionsMatrix) {
+  localStorage.setItem(STORAGE_KEYS.ROLE_PERMISSIONS, JSON.stringify(permissionsMatrix));
+}
+
+/**
+ * Updates a single permission flag for a specific role and saves to storage.
+ *
+ * @param {string} role - Which role to modify.
+ * @param {string} permissionKey - e.g. "canManageQueue" or "canViewAdmin".
+ * @param {boolean} value - Whether permission is granted.
+ */
+function updateRolePermission(role, permissionKey, value) {
+  const permissions = getRolePermissions();
+  if (permissions[role] && permissionKey in DEFAULT_ROLE_PERMISSIONS[USER_ROLES.ADMIN]) {
+    permissions[role][permissionKey] = Boolean(value);
+    saveRolePermissions(permissions);
+  }
+}
+
+/**
+ * Checks if the current active user role has a specific permission.
+ *
+ * @param {string} permissionKey - The permission flag name to check.
+ * @returns {boolean} True if current role has permission, false otherwise.
+ */
+function hasPermission(permissionKey) {
+  const role = getCurrentRole();
+  const permissionsMatrix = getRolePermissions();
+  const rolePerms = permissionsMatrix[role] || DEFAULT_ROLE_PERMISSIONS[role];
+  return Boolean(rolePerms && rolePerms[permissionKey]);
 }
 
 /* ---------------------------------------------------------------------------

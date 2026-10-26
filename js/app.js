@@ -37,8 +37,9 @@ let currentViewName = DEFAULT_VIEW;
  * START-UP - runs once, as soon as the page has loaded.
  * ------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-  // 0. Initialize theme (Light Mode / Dark Mode) preference.
+  // 0. Initialize theme (Light Mode / Dark Mode) preference and Role Selector.
   initTheme();
+  initRoleSelector();
 
   // 1. Let every view connect its buttons and forms.
   Object.values(VIEWS).forEach((view) => view.init());
@@ -54,7 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. If the app is open in two browser tabs (e.g. one as the patient, one
   //    as staff), a change in one tab fires a "storage" event in the other.
   //    Redraw so both tabs stay in sync and show live queue position updates.
-  window.addEventListener('storage', () => VIEWS[currentViewName].render());
+  window.addEventListener('storage', () => {
+    updateNavigationForRole();
+    if (VIEWS[currentViewName]) {
+      VIEWS[currentViewName].render();
+    }
+  });
 
   // 4. Automatically refresh the current view every 30 seconds so wait-time
   //    estimates and queue positions stay up to date as time passes.
@@ -66,6 +72,89 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedView = getSavedViewName();
   showView(VIEWS[savedView] ? savedView : DEFAULT_VIEW);
 });
+
+/* ---------------------------------------------------------------------------
+ * ROLE MANAGEMENT - Role Selector and Navigation Restrictions
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Mapping between view keys and required permissions.
+ */
+const VIEW_PERMISSIONS = {
+  'new-patient': 'canViewNewPatient',
+  'patient-status': 'canViewPatientStatus',
+  'admin': 'canViewAdmin',
+  'survey': 'canViewSurvey',
+  'dashboard': 'canViewDashboard'
+};
+
+/**
+ * Initializes the Role Selector dropdown in the top header.
+ */
+function initRoleSelector() {
+  const roleSelect = document.getElementById('app-role-select');
+  if (!roleSelect) return;
+
+  const currentRole = getCurrentRole();
+  roleSelect.value = currentRole;
+
+  roleSelect.addEventListener('change', (event) => {
+    const newRole = event.target.value;
+    setCurrentRole(newRole);
+    updateNavigationForRole();
+
+    // Check if current view is allowed under new role; if not, navigate to an accessible view
+    if (!isViewAllowed(currentViewName)) {
+      const allowedView = getFirstAllowedView();
+      showView(allowedView);
+    } else {
+      VIEWS[currentViewName].render();
+    }
+  });
+
+  updateNavigationForRole();
+}
+
+/**
+ * Checks if a view is allowed under current role permissions.
+ *
+ * @param {string} viewName - The key of the view, e.g. "admin".
+ * @returns {boolean} True if allowed.
+ */
+function isViewAllowed(viewName) {
+  const requiredPermission = VIEW_PERMISSIONS[viewName];
+  if (!requiredPermission) return true;
+  return hasPermission(requiredPermission);
+}
+
+/**
+ * Finds the first view key that the current role has permission to access.
+ *
+ * @returns {string} The first allowed view key, or DEFAULT_VIEW as fallback.
+ */
+function getFirstAllowedView() {
+  const views = Object.keys(VIEWS);
+  for (const viewKey of views) {
+    if (isViewAllowed(viewKey)) return viewKey;
+  }
+  return DEFAULT_VIEW;
+}
+
+/**
+ * Updates top bar view switcher tab visibility based on active role permissions.
+ */
+function updateNavigationForRole() {
+  const roleSelect = document.getElementById('app-role-select');
+  if (roleSelect) {
+    roleSelect.value = getCurrentRole();
+  }
+
+  document.querySelectorAll('.view-tab').forEach((tab) => {
+    const viewKey = tab.dataset.view;
+    const allowed = isViewAllowed(viewKey);
+    tab.hidden = !allowed;
+  });
+}
 
 /* ---------------------------------------------------------------------------
  * THEME MANAGEMENT - Light mode / Dark mode switch
@@ -129,6 +218,11 @@ function showView(viewName) {
   if (!VIEWS[viewName]) {
     console.error(`showView: there is no view called "${viewName}". Check VIEWS in js/app.js.`);
     return;
+  }
+
+  // Ensure role permissions allow viewing this view.
+  if (!isViewAllowed(viewName)) {
+    viewName = getFirstAllowedView();
   }
 
   currentViewName = viewName;
