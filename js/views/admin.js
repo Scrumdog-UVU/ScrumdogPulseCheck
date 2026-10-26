@@ -21,7 +21,8 @@
 const ADMIN_ACTIONS = {
   CALL_IN: 'call-in',     // WAITING -> CALLED
   MARK_DONE: 'mark-done', // CALLED  -> DONE
-  REMOVE: 'remove'        // delete the patient entirely (e.g. no-show)
+  NO_SHOW: 'no-show',     // WAITING/CALLED -> NO_SHOW
+  REMOVE: 'remove'        // delete the patient entirely
 };
 
 /**
@@ -87,6 +88,9 @@ function handleAdminAction(action, patientId) {
   } else if (action === ADMIN_ACTIONS.MARK_DONE) {
     updatePatient(patientId, { status: PATIENT_STATUS.DONE });
 
+  } else if (action === ADMIN_ACTIONS.NO_SHOW) {
+    updatePatient(patientId, { status: PATIENT_STATUS.NO_SHOW });
+
   } else if (action === ADMIN_ACTIONS.REMOVE) {
     if (!confirm('Remove this patient from the queue?')) return;
     removePatient(patientId);
@@ -107,6 +111,7 @@ function renderAdminView() {
   document.getElementById('admin-count-waiting').textContent = countWithStatus(PATIENT_STATUS.WAITING);
   document.getElementById('admin-count-called').textContent = countWithStatus(PATIENT_STATUS.CALLED);
   document.getElementById('admin-count-done').textContent = countWithStatus(PATIENT_STATUS.DONE);
+  document.getElementById('admin-count-noshow').textContent = countWithStatus(PATIENT_STATUS.NO_SHOW);
 
   // --- Search Query ---------------------------------------------------
   const searchInput = document.getElementById('admin-search-input');
@@ -160,6 +165,21 @@ function renderAdminView() {
     document.getElementById('admin-finished-list'),
     filteredFinished,
     finishedEmptyText
+  );
+
+  // --- No-Show patients ------------------------------------------------
+  const noshowQueueItems = allPatients
+    .filter((patient) => patient.status === PATIENT_STATUS.NO_SHOW)
+    .sort((a, b) => b.checkedInAt - a.checkedInAt)
+    .map((patient) => ({ patient, position: 0 }));
+  const filteredNoshow = noshowQueueItems.filter((item) => matchesSearch(item.patient, query));
+  const noshowEmptyText = rawQuery
+    ? `No no-shows matching "${rawQuery}".`
+    : 'No no-show patients recorded.';
+  fillQueueList(
+    document.getElementById('admin-noshow-list'),
+    filteredNoshow,
+    noshowEmptyText
   );
 }
 
@@ -227,15 +247,19 @@ function buildPatientRow(patient, position) {
   let buttons = '';
   if (patient.status === PATIENT_STATUS.WAITING) {
     buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
+              actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
               actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
   } else if (patient.status === PATIENT_STATUS.CALLED) {
     buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
+              actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
               actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+  } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
+    buttons = actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
   }
   // DONE patients get no buttons.
 
-  // Finished patients don't have a place in line, so no "#1" badge for them.
-  const positionBadge = patient.status === PATIENT_STATUS.DONE
+  // Finished and No-Show patients don't have a place in line, so no "#1" badge for them.
+  const positionBadge = (patient.status === PATIENT_STATUS.DONE || patient.status === PATIENT_STATUS.NO_SHOW)
     ? ''
     : `<span class="row-position">#${position}</span>`;
 
@@ -251,6 +275,7 @@ function buildPatientRow(patient, position) {
         ${allergyLine}
         <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine} · ${consentBadge}</span>
         ${patient.status === PATIENT_STATUS.CALLED ? '<span class="row-called-note">Called in - on their way</span>' : ''}
+        ${patient.status === PATIENT_STATUS.NO_SHOW ? '<span class="row-called-note" style="color: var(--status-no-show);">Flagged as No-Show</span>' : ''}
       </div>
       <div class="row-buttons">${buttons}</div>
     </div>

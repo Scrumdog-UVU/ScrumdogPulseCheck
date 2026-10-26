@@ -292,6 +292,10 @@
           <span class="summary-number" id="admin-count-done">0</span>
           <span class="summary-label">Seen Today</span>
         </div>
+        <div class="summary-box">
+          <span class="summary-number" id="admin-count-noshow">0</span>
+          <span class="summary-label">No-Shows</span>
+        </div>
       </div>
 
       <!-- Patient Search Bar -->
@@ -322,6 +326,12 @@
       <div class="card finished-card">
         <h2 class="queue-title">Finished Visits</h2>
         <div id="admin-finished-list" class="queue-list"></div>
+      </div>
+
+      <!-- Patients flagged as no-show. -->
+      <div class="card noshow-card">
+        <h2 class="queue-title">No-Show Patients</h2>
+        <div id="admin-noshow-list" class="queue-list"></div>
       </div>
 
       <!-- Demo helpers. -->

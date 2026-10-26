@@ -38,6 +38,7 @@
   --status-waiting: #f59e0b;   /* amber */
   --status-called: #108981;    /* brand teal */
   --status-done: #64748b;      /* gray */
+  --status-no-show: #ef4444;   /* red */
 
   --radius: 12px;              /* how rounded card corners are */
 

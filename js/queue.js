@@ -30,7 +30,9 @@ const MINUTES_PER_PATIENT = 15;
  */
 function getQueue(visitType) {
   const patientsInLine = getAllPatients().filter((patient) =>
-    patient.visitType === visitType && patient.status !== PATIENT_STATUS.DONE
+    patient.visitType === visitType &&
+    patient.status !== PATIENT_STATUS.DONE &&
+    patient.status !== PATIENT_STATUS.NO_SHOW
   );
 
   if (visitType === VISIT_TYPE.APPOINTMENT) {

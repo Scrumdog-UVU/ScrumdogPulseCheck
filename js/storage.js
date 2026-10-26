@@ -54,11 +54,13 @@ const STORAGE_KEYS = {
  *   WAITING  -> checked in, waiting in line
  *   CALLED   -> staff have called them in; they should come to the front desk
  *   DONE     -> visit finished
+ *   NO_SHOW  -> patient did not show up when called or scheduled
  */
 const PATIENT_STATUS = {
   WAITING: 'waiting',
   CALLED: 'called',
-  DONE: 'done'
+  DONE: 'done',
+  NO_SHOW: 'no-show'
 };
 
 /** The two kinds of visit. Each kind has its own separate queue. */
