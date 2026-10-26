@@ -138,13 +138,13 @@
          Styles live in: css/new-patient.css
          ================================================================= -->
     <section id="view-new-patient" class="view" hidden>
-      <h1 class="view-title">Patient Check-In</h1>
+      <h1 class="view-title" tabindex="-1">Patient Check-In</h1>
       <p class="view-subtitle">Check in from anywhere and hold your place in line before you arrive.</p>
 
       <div class="card form-card">
         <!-- Current wait, so the patient knows what to expect before joining. -->
         <p class="wait-preview">
-          Current estimated wait for walk-ins: <strong id="new-patient-wait-preview">-</strong>
+          Current estimated wait for walk-ins: <strong id="new-patient-wait-preview" aria-live="polite" role="status">-</strong>
         </p>
 
         <form id="checkin-form">
@@ -211,7 +211,7 @@
          Styles live in: css/patient-status.css
          ================================================================= -->
     <section id="view-patient-status" class="view" hidden>
-      <h1 class="view-title">My Check-In Status</h1>
+      <h1 class="view-title" tabindex="-1">My Check-In Status</h1>
       <p class="view-subtitle">See where you are in line and how long you can expect to wait.</p>
 
       <!-- Shown when nobody has checked in yet. -->
@@ -229,12 +229,12 @@
 
         <div id="status-ticket" class="card ticket-card">
           <div class="ticket-header">
-            <span id="status-badge" class="status-badge">Waiting</span>
+            <span id="status-badge" class="status-badge" aria-live="polite" role="status">Waiting</span>
             <span id="status-ticket-number" class="ticket-number">#T-000</span>
           </div>
 
           <!-- A short, friendly message that changes with the status. -->
-          <p id="status-message" class="status-message"></p>
+          <p id="status-message" class="status-message" aria-live="polite" role="status"></p>
 
           <!-- Position + wait. Hidden once the patient is called or done. -->
           <div id="status-stats" class="ticket-stats">
@@ -269,7 +269,7 @@
          Styles live in: css/admin.css
          ================================================================= -->
     <section id="view-admin" class="view" hidden>
-      <h1 class="view-title">Clinic Queue</h1>
+      <h1 class="view-title" tabindex="-1">Clinic Queue</h1>
       <p class="view-subtitle">Call patients in and mark visits complete.</p>
 
       <!-- Quick counts at the top of the page. -->
@@ -323,10 +323,10 @@
          Styles live in: css/survey.css
          ================================================================= -->
     <section id="view-survey" class="view" hidden>
-      <h1 class="view-title">Post-Visit Survey</h1>
+      <h1 class="view-title" tabindex="-1">Post-Visit Survey</h1>
       <p class="view-subtitle">Tell us about your clinic visit experience and how we can improve.</p>
 
-      <div id="survey-success-banner" class="survey-success-banner" hidden>
+      <div id="survey-success-banner" class="survey-success-banner" aria-live="polite" role="status" hidden>
         Thank you for your feedback! Your survey response has been saved.
       </div>
 
@@ -340,29 +340,31 @@
           </div>
 
           <div class="form-row">
-            <label>Overall Visit Rating</label>
-            <div class="star-rating-group">
-              <label class="star-option">
-                <input type="radio" name="survey-rating" value="5" required checked>
-                <span class="star-label"><span class="star-icon">★</span> 5 - Excellent</span>
-              </label>
-              <label class="star-option">
-                <input type="radio" name="survey-rating" value="4">
-                <span class="star-label"><span class="star-icon">★</span> 4 - Good</span>
-              </label>
-              <label class="star-option">
-                <input type="radio" name="survey-rating" value="3">
-                <span class="star-label"><span class="star-icon">★</span> 3 - Average</span>
-              </label>
-              <label class="star-option">
-                <input type="radio" name="survey-rating" value="2">
-                <span class="star-label"><span class="star-icon">★</span> 2 - Poor</span>
-              </label>
-              <label class="star-option">
-                <input type="radio" name="survey-rating" value="1">
-                <span class="star-label"><span class="star-icon">★</span> 1 - Very Poor</span>
-              </label>
-            </div>
+            <fieldset class="rating-fieldset">
+              <legend>Overall Visit Rating</legend>
+              <div class="star-rating-group">
+                <label class="star-option">
+                  <input type="radio" name="survey-rating" value="5" required checked>
+                  <span class="star-label"><span class="star-icon">★</span> 5 - Excellent</span>
+                </label>
+                <label class="star-option">
+                  <input type="radio" name="survey-rating" value="4">
+                  <span class="star-label"><span class="star-icon">★</span> 4 - Good</span>
+                </label>
+                <label class="star-option">
+                  <input type="radio" name="survey-rating" value="3">
+                  <span class="star-label"><span class="star-icon">★</span> 3 - Average</span>
+                </label>
+                <label class="star-option">
+                  <input type="radio" name="survey-rating" value="2">
+                  <span class="star-label"><span class="star-icon">★</span> 2 - Poor</span>
+                </label>
+                <label class="star-option">
+                  <input type="radio" name="survey-rating" value="1">
+                  <span class="star-label"><span class="star-icon">★</span> 1 - Very Poor</span>
+                </label>
+              </div>
+            </fieldset>
           </div>
 
           <div class="form-row">
@@ -388,13 +390,13 @@
          Styles live in: css/dashboard.css
          ================================================================= -->
     <section id="view-dashboard" class="view" hidden>
-      <h1 class="view-title">Live Queue Dashboard</h1>
+      <h1 class="view-title" tabindex="-1">Live Queue Dashboard</h1>
       <p class="view-subtitle">The whole front desk at a glance. This page updates on its own.</p>
 
       <!-- "Live" badge + the time the dashboard last redrew itself. -->
       <div class="dashboard-live-bar">
         <span class="dashboard-live-indicator"><span class="dashboard-live-dot"></span>Live</span>
-        <span>Last updated <strong id="dashboard-updated-time">-</strong></span>
+        <span>Last updated <strong id="dashboard-updated-time" aria-live="polite" role="status">-</strong></span>
       </div>
 
       <!-- Headline numbers. -->

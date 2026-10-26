@@ -17,7 +17,7 @@
   --card-bg: #1e293b;          /* boxes / cards */
   --card-border: #334155;      /* card outlines and dividers */
   --text-primary: #f8fafc;     /* main text */
-  --text-secondary: #94a3b8;   /* quieter text (hints, labels) */
+  --text-secondary: #cbd5e1;   /* quieter text with WCAG AA compliant contrast ratio against dark card backgrounds */
 
   /* Brand Palette - PulseCheck Brand Guide */
   --accent-color: #3882f6;     /* Primary Blue */
@@ -52,7 +52,7 @@
   --card-bg: #ffffff;          /* clean white cards */
   --card-border: #cbd5e1;      /* subtle card borders */
   --text-primary: #0f172a;     /* dark slate text */
-  --text-secondary: #64748b;   /* slate secondary text */
+  --text-secondary: #475569;   /* slate secondary text with WCAG AA compliant contrast ratio against light card backgrounds */
 
   --topbar-bg: rgba(255, 255, 255, 0.85);
   --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
@@ -364,9 +364,20 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(56, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(56, 130, 246, 0.4);
+}
+
+/* Accessible focus visible outlines for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.view-title:focus {
+  outline: none;
 }
 
 /* ---------------------------------------------------------------------------

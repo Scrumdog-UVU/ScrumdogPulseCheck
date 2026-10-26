@@ -149,4 +149,10 @@ function showView(viewName) {
   // Draw the view with the latest saved data.
   VIEWS[viewName].render();
   window.scrollTo(0, 0);
+
+  // Shift focus to the active view title heading so screen reader users are announced of the view change.
+  const activeTitle = document.querySelector(`#view-${viewName} .view-title`);
+  if (activeTitle) {
+    activeTitle.focus();
+  }
 }
