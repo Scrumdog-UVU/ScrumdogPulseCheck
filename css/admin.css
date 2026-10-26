@@ -145,6 +145,25 @@
   color: var(--text-secondary);
 }
 
+/* Flagged allergies warning highlight in Staff View */
+.row-allergies-flagged {
+  color: #f87171;
+  font-weight: 700;
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  margin: 0.2rem 0;
+  display: inline-block;
+  width: fit-content;
+}
+
+[data-theme="light"] .row-allergies-flagged {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
 .row-buttons {
   display: flex;
   flex-direction: column;

@@ -177,6 +177,11 @@
           </div>
 
           <div class="form-row">
+            <label for="patient-allergies">Known / Flagged Allergies</label>
+            <input type="text" id="patient-allergies" placeholder="e.g. Penicillin, Latex, Peanuts (or None)" maxlength="100">
+          </div>
+
+          <div class="form-row">
             <label for="visit-type">Do you have a scheduled appointment?</label>
             <!-- These values must match VISIT_TYPE in js/storage.js -->
             <select id="visit-type" required>
@@ -252,6 +257,7 @@
             <p><strong>Patient:</strong> <span id="status-name"></span></p>
             <p><strong>Date of Birth:</strong> <span id="status-dob"></span></p>
             <p><strong>Reason:</strong> <span id="status-reason"></span></p>
+            <p><strong>Allergies:</strong> <span id="status-allergies"></span></p>
             <p><strong>Visit type:</strong> <span id="status-visit-type"></span></p>
             <p><strong>Notifications:</strong> <span id="status-messaging-consent"></span></p>
             <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>

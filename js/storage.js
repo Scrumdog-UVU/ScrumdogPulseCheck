@@ -27,6 +27,7 @@
  *     visitType:       "walk-in"              // VISIT_TYPE.WALK_IN or VISIT_TYPE.APPOINTMENT
  *     appointmentTime: "14:30" or null        // only set for appointments (24-hour "HH:MM")
  *     messagingConsent: false                 // true if explicit consent given for SMS/push messages
+ *     allergies:       "Penicillin"           // known/flagged allergies (optional string, defaults to "")
  *     checkedInAt:     1695400000000          // Date.now() when they checked in
  *     status:          "waiting"              // one of PATIENT_STATUS below
  *   }
@@ -133,6 +134,7 @@ function addPatient(details) {
     visitType: details.visitType,
     appointmentTime: details.visitType === VISIT_TYPE.APPOINTMENT ? details.appointmentTime : null,
     messagingConsent: Boolean(details.messagingConsent),
+    allergies: details.allergies ? details.allergies.trim() : '',
     checkedInAt: now,
     status: PATIENT_STATUS.WAITING
   };

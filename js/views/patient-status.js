@@ -97,6 +97,7 @@ function fillTicket(patient) {
   document.getElementById('status-name').textContent = patient.name;
   document.getElementById('status-dob').textContent = patient.dob || 'N/A';
   document.getElementById('status-reason').textContent = patient.reason;
+  document.getElementById('status-allergies').textContent = patient.allergies || 'None';
   document.getElementById('status-checked-in').textContent = formatClockTime(patient.checkedInAt);
   document.getElementById('status-visit-type').textContent =
     patient.visitType === VISIT_TYPE.APPOINTMENT

@@ -143,6 +143,13 @@ function buildPatientRow(patient, position) {
     ? '<span class="consent-tag consent-yes">📱 SMS/Push Opted In</span>'
     : '<span class="consent-tag consent-no">📵 SMS/Push Opted Out</span>';
 
+  const allergiesRaw = (patient.allergies || '').trim();
+  const hasFlaggedAllergies = allergiesRaw.length > 0 && !['none', 'no', 'n/a', 'nkda', 'none known'].includes(allergiesRaw.toLowerCase());
+
+  const allergyLine = hasFlaggedAllergies
+    ? `<span class="row-detail row-allergies-flagged">⚠️ <strong>Flagged Allergies:</strong> ${escapeHTML(allergiesRaw)}</span>`
+    : `<span class="row-detail">🩺 <strong>Allergies:</strong> ${escapeHTML(allergiesRaw || 'None')}</span>`;
+
   // Which buttons to show depends on where the patient is in their visit.
   let buttons = '';
   if (patient.status === PATIENT_STATUS.WAITING) {
@@ -168,6 +175,7 @@ function buildPatientRow(patient, position) {
         </span>
         <span class="row-detail">${escapeHTML(patient.reason)}</span>
         ${appointmentLine}
+        ${allergyLine}
         <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine} · ${consentBadge}</span>
         ${patient.status === PATIENT_STATUS.CALLED ? '<span class="row-called-note">Called in - on their way</span>' : ''}
       </div>

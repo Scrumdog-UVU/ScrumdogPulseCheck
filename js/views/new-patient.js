@@ -61,6 +61,7 @@ function handleCheckIn() {
     dob: document.getElementById('patient-dob').value,
     phone: document.getElementById('patient-phone').value.trim(),
     reason: document.getElementById('visit-reason').value,
+    allergies: document.getElementById('patient-allergies').value.trim(),
     visitType: document.getElementById('visit-type').value,
     appointmentTime: document.getElementById('appointment-time').value,
     messagingConsent: document.getElementById('patient-messaging-consent').checked
