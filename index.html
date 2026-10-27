@@ -238,6 +238,20 @@
 
       <!-- Shown when at least one patient exists. -->
       <div id="status-content" hidden>
+        <!-- Pretend push notification: "It's your turn!"
+             Slides down from the top of the screen when staff call this
+             patient in, if they opted in to notifications at check-in.
+             Shown and hidden by fillTurnAlert() in js/views/patient-status.js. -->
+        <div id="status-turn-alert" class="turn-alert" role="alert" hidden>
+          <img src="images/logo-icon.png" alt="" class="turn-alert-icon">
+          <div class="turn-alert-body">
+            <p class="turn-alert-app">PulseCheck &middot; now</p>
+            <p class="turn-alert-title">It's your turn!</p>
+            <p class="turn-alert-text">Ticket <span id="status-turn-alert-ticket">#T-000</span>: please come to the front desk now.</p>
+          </div>
+          <button type="button" id="status-turn-alert-dismiss" class="turn-alert-dismiss" aria-label="Dismiss notification">&times;</button>
+        </div>
+
         <div class="form-row patient-picker">
           <label for="status-patient-select">Viewing as patient:</label>
           <select id="status-patient-select"></select>

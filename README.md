@@ -14,6 +14,8 @@ Use the buttons in the top bar to switch roles:
 1. **New Patient**: fill in the form to check in. You'll be taken to My Status.
 2. **My Status**: see your ticket, place in line, and estimated wait. Use the
    "Viewing as patient" drop-down to switch between checked-in patients.
+   If the patient ticked the notifications box when checking in, a pretend
+   push notification ("It's your turn!") pops up here when staff call them in.
 3. **Staff View**: see the Scheduled Appointments and Walk-ins queues.
    **Call In** a patient, then **Mark Done** when their visit is over.
 4. **Dashboard**: a live, read-only overview for front-desk staff. It shows

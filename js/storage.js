@@ -48,7 +48,8 @@ const STORAGE_KEYS = {
   SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
   THEME: 'pulsecheck_theme',                       // user theme choice: "light" or "dark"
   CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
-  ROLE_PERMISSIONS: 'pulsecheck_role_permissions'  // matrix of role-based permissions
+  ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
+  DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts' // patient ids that closed their "It's your turn" alert
 };
 
 /**
@@ -450,6 +451,53 @@ function hasPermission(permissionKey) {
   const permissionsMatrix = getRolePermissions();
   const rolePerms = permissionsMatrix[role] || DEFAULT_ROLE_PERMISSIONS[role];
   return Boolean(rolePerms && rolePerms[permissionKey]);
+}
+
+/* ---------------------------------------------------------------------------
+ * "IT'S YOUR TURN" ALERTS - the pretend push notification on My Status
+ * Remembers which patients have already closed their alert, so it doesn't
+ * pop up again after a page refresh or in a second browser tab.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Checks whether a patient has already closed their "It's your turn" alert.
+ *
+ * @param {string} patientId
+ * @returns {boolean} True if they already dismissed it.
+ */
+function hasDismissedTurnAlert(patientId) {
+  return getDismissedTurnAlertIds().includes(patientId);
+}
+
+/**
+ * Remembers that a patient closed their "It's your turn" alert.
+ *
+ * @param {string} patientId
+ */
+function dismissTurnAlert(patientId) {
+  const dismissedIds = getDismissedTurnAlertIds();
+  if (dismissedIds.includes(patientId)) return; // already saved, nothing to do
+
+  dismissedIds.push(patientId);
+  localStorage.setItem(STORAGE_KEYS.DISMISSED_TURN_ALERTS, JSON.stringify(dismissedIds));
+}
+
+/**
+ * Loads the list of patient ids whose alert has been dismissed.
+ * (Other files should use the two functions above instead.)
+ *
+ * @returns {Array<string>} Patient ids. Empty list if none.
+ */
+function getDismissedTurnAlertIds() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.DISMISSED_TURN_ALERTS);
+  if (!savedText) return [];
+
+  try {
+    return JSON.parse(savedText);
+  } catch (error) {
+    console.error('Saved turn-alert data was unreadable, starting fresh.', error);
+    return [];
+  }
 }
 
 /* ---------------------------------------------------------------------------

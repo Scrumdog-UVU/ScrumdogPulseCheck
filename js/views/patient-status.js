@@ -15,6 +15,10 @@
  * PRIVACY NOTE: a patient should never see other patients' names or details.
  * This view only shows the chosen patient's own information plus counts.
  * (The drop-down of names exists only because this is a single-user demo.)
+ *
+ * PUSH NOTIFICATION: when staff click "Call In", this view also pops up a
+ * pretend phone notification saying "It's your turn!" (see the
+ * SIMULATED PUSH NOTIFICATION section at the bottom of this file).
  */
 
 /**
@@ -37,6 +41,15 @@ function initPatientStatusView() {
 
     removePatient(patientId);
     setCurrentPatientId(null);
+    renderPatientStatusView();
+  });
+
+  // The "x" on the "It's your turn" notification closes it for good.
+  document.getElementById('status-turn-alert-dismiss').addEventListener('click', () => {
+    const patientId = getCurrentPatientId();
+    if (!patientId) return;
+
+    dismissTurnAlert(patientId);
     renderPatientStatusView();
   });
 }
@@ -65,6 +78,7 @@ function renderPatientStatusView() {
 
   fillPatientPicker(allPatients, patient.id);
   fillTicket(patient);
+  fillTurnAlert(patient);
 }
 
 /**
@@ -146,4 +160,97 @@ function fillTicket(patient) {
     stats.hidden = true;
     cancelButton.hidden = true;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED PUSH NOTIFICATION ("It's your turn!")
+ * A real clinic app would send a push notification to the patient's phone
+ * the moment staff click "Call In". This demo has no phones or servers, so
+ * the My Status view plays the part of the patient's phone: a notification
+ * slides down from the top of the screen, "buzzes", and plays a short chime.
+ * HTML: <div id="status-turn-alert"> in index.html
+ * Styles: the "SIMULATED PUSH NOTIFICATION" section of css/patient-status.css
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Shows or hides the pretend push notification for one patient.
+ *
+ * The notification only appears when ALL of these are true:
+ *   - staff have officially called the patient in (status is CALLED),
+ *   - the patient ticked the SMS / push consent box when checking in, and
+ *   - the patient hasn't already closed it with the "x" button.
+ *
+ * @param {Object} patient - The patient whose "phone" this is.
+ */
+function fillTurnAlert(patient) {
+  const alertBox = document.getElementById('status-turn-alert');
+
+  const shouldShow = patient.status === PATIENT_STATUS.CALLED &&
+    patient.messagingConsent &&
+    !hasDismissedTurnAlert(patient.id);
+
+  if (!shouldShow) {
+    alertBox.hidden = true;
+    return;
+  }
+
+  // This view redraws every 30 seconds and whenever data changes. Only chime
+  // when the alert is NEW (not already on screen for this same patient), so
+  // it doesn't ding over and over.
+  const isNewAlert = alertBox.hidden || alertBox.dataset.patientId !== patient.id;
+
+  // Show the ticket number but not the name: phone notifications can be
+  // seen by anyone looking at the lock screen.
+  document.getElementById('status-turn-alert-ticket').textContent = `#${patient.ticketNumber}`;
+  alertBox.dataset.patientId = patient.id;
+  alertBox.hidden = false;
+
+  if (isNewAlert) {
+    playTurnAlertChime();
+  }
+}
+
+/** The browser's sound player for the chime. Created the first time it's needed. */
+let turnAlertSoundPlayer = null;
+
+/**
+ * Plays a short two-note "ding-ding" like a phone notification. The browser
+ * makes the sound itself (the Web Audio feature), so no sound file is needed.
+ *
+ * Browsers don't allow a page to make sound until the person has clicked
+ * somewhere on it. If they haven't yet (for example, right after a page
+ * refresh), we quietly skip the sound. The notification still appears.
+ */
+function playTurnAlertChime() {
+  // Older browsers name the sound player differently, or don't have one.
+  const SoundPlayer = window.AudioContext || window.webkitAudioContext;
+  const pageHasBeenClicked = navigator.userActivation ? navigator.userActivation.hasBeenActive : true;
+  if (!SoundPlayer || !pageHasBeenClicked) return;
+
+  turnAlertSoundPlayer = turnAlertSoundPlayer || new SoundPlayer();
+  // The player can fall asleep while it's not in use. Wake it up. (.catch
+  // ignores the rare case where the browser still says no.)
+  turnAlertSoundPlayer.resume().catch(() => {});
+
+  // Two notes, one right after the other. The numbers are pitches in hertz;
+  // the second note is higher, which sounds like a friendly "ding-ding".
+  [880, 1320].forEach((pitch, noteNumber) => {
+    const startTime = turnAlertSoundPlayer.currentTime + noteNumber * 0.15;
+    const tone = turnAlertSoundPlayer.createOscillator(); // makes the note
+    const volume = turnAlertSoundPlayer.createGain();     // controls how loud it is
+
+    tone.frequency.value = pitch;
+
+    // Fade in fast, then fade out, so the note sounds like a soft bell
+    // instead of a harsh beep.
+    volume.gain.setValueAtTime(0.0001, startTime);
+    volume.gain.exponentialRampToValueAtTime(0.2, startTime + 0.02);
+    volume.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.5);
+
+    // Wire it up: note -> volume knob -> speakers.
+    tone.connect(volume);
+    volume.connect(turnAlertSoundPlayer.destination);
+    tone.start(startTime);
+    tone.stop(startTime + 0.5);
+  });
 }
