@@ -139,6 +139,40 @@ body {
   color: var(--accent-teal);
 }
 
+/* Role Selector dropdown styling for header */
+.role-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+}
+
+.role-select-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.role-select {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  outline: none;
+  width: auto;
+}
+
+.role-select:focus {
+  box-shadow: none;
+}
+
 /* The three view buttons, styled as a joined "pill" of tabs. */
 .view-switcher {
   display: flex;

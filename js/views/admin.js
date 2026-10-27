@@ -64,15 +64,44 @@ function initAdminView() {
   }
 
   document.getElementById('admin-clear-finished-btn').addEventListener('click', () => {
+    if (!hasPermission('canResetData')) {
+      alert('You do not have permission to clear finished visits.');
+      return;
+    }
     removeFinishedPatients();
     renderAdminView();
   });
 
   document.getElementById('admin-reset-btn').addEventListener('click', () => {
+    if (!hasPermission('canResetData')) {
+      alert('You do not have permission to reset demo data.');
+      return;
+    }
     if (!confirm('Delete ALL patients and start over? This cannot be undone.')) return;
     clearAllData();
     renderAdminView();
   });
+
+  // Event listener for RBAC permissions checkboxes in the admin permissions card
+  const permissionsContainer = document.getElementById('admin-permissions-matrix-container');
+  if (permissionsContainer) {
+    permissionsContainer.addEventListener('change', (event) => {
+      const checkbox = event.target.closest('input[data-role-perm]');
+      if (!checkbox) return;
+
+      const role = checkbox.dataset.role;
+      const permKey = checkbox.dataset.perm;
+      const isChecked = checkbox.checked;
+
+      updateRolePermission(role, permKey, isChecked);
+
+      // Refresh top navigation tabs and admin view in case current role permissions changed
+      if (typeof updateNavigationForRole === 'function') {
+        updateNavigationForRole();
+      }
+      renderAdminView();
+    });
+  }
 }
 
 /**
@@ -82,6 +111,11 @@ function initAdminView() {
  * @param {string} patientId - Which patient the button belongs to.
  */
 function handleAdminAction(action, patientId) {
+  if (!hasPermission('canManageQueue')) {
+    alert('Your active role does not have permission to modify the patient queue.');
+    return;
+  }
+
   if (action === ADMIN_ACTIONS.CALL_IN) {
     updatePatient(patientId, { status: PATIENT_STATUS.CALLED });
 
@@ -122,6 +156,16 @@ function renderAdminView() {
   if (clearBtn) {
     clearBtn.hidden = rawQuery.length === 0;
   }
+
+  // --- Admin Demo Tools Visibility ------------------------------------
+  const canReset = hasPermission('canResetData');
+  const clearFinishedBtn = document.getElementById('admin-clear-finished-btn');
+  const resetBtn = document.getElementById('admin-reset-btn');
+  if (clearFinishedBtn) clearFinishedBtn.hidden = !canReset;
+  if (resetBtn) resetBtn.hidden = !canReset;
+
+  // --- Role Permissions Management Matrix Card -------------------------
+  renderPermissionsCard();
 
   // --- The two queues --------------------------------------------------
   const appointmentQueueItems = getQueue(VISIT_TYPE.APPOINTMENT).map((patient, index) => ({
@@ -243,18 +287,25 @@ function buildPatientRow(patient, position) {
     ? `<span class="row-detail row-allergies-flagged">⚠️ <strong>Flagged Allergies:</strong> ${escapeHTML(allergiesRaw)}</span>`
     : `<span class="row-detail">🩺 <strong>Allergies:</strong> ${escapeHTML(allergiesRaw || 'None')}</span>`;
 
+  // Check if current role has queue management permission
+  const canManage = hasPermission('canManageQueue');
+
   // Which buttons to show depends on where the patient is in their visit.
   let buttons = '';
-  if (patient.status === PATIENT_STATUS.WAITING) {
-    buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
-              actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
-              actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
-  } else if (patient.status === PATIENT_STATUS.CALLED) {
-    buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
-              actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
-              actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
-  } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
-    buttons = actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+  if (canManage) {
+    if (patient.status === PATIENT_STATUS.WAITING) {
+      buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
+                actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
+                actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+    } else if (patient.status === PATIENT_STATUS.CALLED) {
+      buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
+                actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
+                actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+    } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
+      buttons = actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+    }
+  } else {
+    buttons = '<span class="row-detail" style="font-style: italic;">View Only</span>';
   }
   // DONE patients get no buttons.
 
@@ -294,4 +345,80 @@ function buildPatientRow(patient, position) {
 function actionButton(action, label, styleClass, patientId) {
   return `<button type="button" class="btn btn-small ${styleClass}"
             data-action="${action}" data-patient-id="${escapeHTML(patientId)}">${label}</button>`;
+}
+
+/**
+ * Renders the Role-Based Access Control (RBAC) permissions management card in Staff View.
+ * Visible when current user role has `canManageRoles` permission.
+ */
+function renderPermissionsCard() {
+  const permissionsCard = document.getElementById('admin-permissions-card');
+  const container = document.getElementById('admin-permissions-matrix-container');
+  if (!permissionsCard || !container) return;
+
+  const canManageRoles = hasPermission('canManageRoles');
+  permissionsCard.hidden = !canManageRoles;
+  if (!canManageRoles) return;
+
+  const permissionsMatrix = getRolePermissions();
+  const roles = Object.values(USER_ROLES);
+
+  const permissionLabels = {
+    canViewAdmin: 'Access Staff View',
+    canViewDashboard: 'Access Live Queue Dashboard',
+    canViewPatientStatus: 'Access My Status View',
+    canViewNewPatient: 'Access New Patient Check-In',
+    canViewSurvey: 'Access Post-Visit Survey',
+    canManageQueue: 'Manage Patient Queue (Call in, Mark done, Remove)',
+    canManageRoles: 'Manage Role Permissions & Access Control',
+    canResetData: 'Reset Demo Data & Clear Finished Visits'
+  };
+
+  const permKeys = Object.keys(permissionLabels);
+
+  let tableHtml = `
+    <div class="rbac-table-wrapper">
+      <table class="rbac-table">
+        <thead>
+          <tr>
+            <th>Permission</th>
+            ${roles.map((role) => `<th>${escapeHTML(ROLE_LABELS[role] || role)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  permKeys.forEach((permKey) => {
+    tableHtml += `
+      <tr>
+        <td class="rbac-perm-label">${escapeHTML(permissionLabels[permKey])}</td>
+        ${roles.map((role) => {
+          const isChecked = Boolean(permissionsMatrix[role] && permissionsMatrix[role][permKey]);
+          // To prevent accidental lockout, disable editing Clinic Admin's canManageRoles & canViewAdmin
+          const isProtected = role === USER_ROLES.ADMIN && (permKey === 'canManageRoles' || permKey === 'canViewAdmin');
+          return `
+            <td class="rbac-perm-cell">
+              <label class="rbac-checkbox-wrapper">
+                <input type="checkbox"
+                       data-role-perm="true"
+                       data-role="${escapeHTML(role)}"
+                       data-perm="${escapeHTML(permKey)}"
+                       ${isChecked ? 'checked' : ''}
+                       ${isProtected ? 'disabled title="Protected Clinic Admin permission"' : ''}>
+                <span class="sr-only">${escapeHTML(ROLE_LABELS[role])} ${escapeHTML(permissionLabels[permKey])}</span>
+              </label>
+            </td>
+          `;
+        }).join('')}
+      </tr>
+    `;
+  });
+
+  tableHtml += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.innerHTML = tableHtml;
 }
