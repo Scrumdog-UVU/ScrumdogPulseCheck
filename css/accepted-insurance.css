@@ -1,0 +1,174 @@
+/*
+ * =============================================================================
+ * css/accepted-insurance.css - styles for VIEW 6: Accepted Insurance Plans.
+ * =============================================================================
+ * Only styles for <section id="view-accepted-insurance"> and the insurance link
+ * on the New Patient check-in page belong here.
+ * Shared variables and core rules (colors, buttons, inputs) are in css/base.css.
+ */
+
+/* ---------------------------------------------------------------------------
+ * STATIC LINK ON NEW PATIENT CHECK-IN FORM
+ * ------------------------------------------------------------------------- */
+.insurance-link-wrapper {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--card-border);
+  text-align: center;
+}
+
+.btn-link {
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.insurance-link {
+  color: var(--accent-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.insurance-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.insurance-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  stroke: var(--accent-teal);
+}
+
+/* ---------------------------------------------------------------------------
+ * ACCEPTED INSURANCE VIEW LAYOUT
+ * ------------------------------------------------------------------------- */
+
+.insurance-back-bar {
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.insurance-search-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Grid layout for 18+ insurance provider cards */
+.insurance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.insurance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.insurance-card:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.insurance-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.insurance-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.insurance-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: rgba(16, 137, 129, 0.15);
+  color: var(--accent-teal);
+  border: 1px solid rgba(16, 137, 129, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.insurance-type {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: 0.25rem;
+}
+
+.insurance-details {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* Empty search result card */
+.insurance-empty-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.insurance-empty-subnote {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+/* Bottom help note card */
+.insurance-note-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.insurance-note-card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.insurance-note-card p {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  max-width: 650px;
+}
+
+.insurance-action-wrapper {
+  margin-top: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * SMALL SCREENS
+ * ------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .insurance-grid {
+    grid-template-columns: 1fr;
+  }
+}
