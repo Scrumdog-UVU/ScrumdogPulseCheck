@@ -26,7 +26,9 @@
  *     reason:          "Routine Checkup"      // one of the <option>s in index.html
  *     visitType:       "walk-in"              // VISIT_TYPE.WALK_IN or VISIT_TYPE.APPOINTMENT
  *     appointmentTime: "14:30" or null        // only set for appointments (24-hour "HH:MM")
- *     messagingConsent: false                 // true if explicit consent given for SMS/push messages
+ *     smsConsent:      false                  // true if patient consented to receive SMS updates
+ *     pushConsent:     false                  // true if patient consented to receive push notifications
+ *     messagingConsent: false                 // legacy consent flag kept for backward compatibility
  *     allergies:       "Penicillin"           // known/flagged allergies (optional string, defaults to "")
  *     checkedInAt:     1695400000000          // Date.now() when they checked in
  *     status:          "waiting"              // one of PATIENT_STATUS below
@@ -188,11 +190,19 @@ function getPatientById(patientId) {
  * The record starts in the WAITING status.
  *
  * @param {Object} details - What the patient entered on the check-in form:
- *   { name, dob, phone, reason, visitType, appointmentTime, messagingConsent }
+ *   { name, dob, phone, reason, visitType, appointmentTime, smsConsent, pushConsent, messagingConsent }
  * @returns {Object} The complete new patient record (including its new id).
  */
 function addPatient(details) {
   const now = Date.now();
+
+  // Support separate SMS and Push consents, falling back to legacy messagingConsent if present
+  const smsConsent = details.smsConsent !== undefined
+    ? Boolean(details.smsConsent)
+    : Boolean(details.messagingConsent);
+  const pushConsent = details.pushConsent !== undefined
+    ? Boolean(details.pushConsent)
+    : Boolean(details.messagingConsent);
 
   const newPatient = {
     // Time + a few random letters, so two check-ins in the same
@@ -205,7 +215,9 @@ function addPatient(details) {
     reason: details.reason,
     visitType: details.visitType,
     appointmentTime: details.visitType === VISIT_TYPE.APPOINTMENT ? details.appointmentTime : null,
-    messagingConsent: Boolean(details.messagingConsent),
+    smsConsent: smsConsent,
+    pushConsent: pushConsent,
+    messagingConsent: smsConsent || pushConsent,
     allergies: details.allergies ? details.allergies.trim() : '',
     checkedInAt: now,
     status: PATIENT_STATUS.WAITING

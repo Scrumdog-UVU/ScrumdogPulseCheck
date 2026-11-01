@@ -276,9 +276,22 @@ function buildPatientRow(patient, position) {
     ? ` · 🎂 DOB: ${escapeHTML(patient.dob)}`
     : '';
 
-  const consentBadge = patient.messagingConsent
-    ? '<span class="consent-tag consent-yes">📱 SMS/Push Opted In</span>'
-    : '<span class="consent-tag consent-no">📵 SMS/Push Opted Out</span>';
+  // Support separate SMS and Push consents with fallback to legacy messagingConsent
+  const hasSmsConsent = patient.smsConsent !== undefined
+    ? Boolean(patient.smsConsent)
+    : Boolean(patient.messagingConsent);
+  const hasPushConsent = patient.pushConsent !== undefined
+    ? Boolean(patient.pushConsent)
+    : Boolean(patient.messagingConsent);
+
+  const smsBadge = hasSmsConsent
+    ? '<span class="consent-tag consent-yes">💬 SMS: Yes</span>'
+    : '<span class="consent-tag consent-no">💬 SMS: No</span>';
+  const pushBadge = hasPushConsent
+    ? '<span class="consent-tag consent-yes">🔔 Push: Yes</span>'
+    : '<span class="consent-tag consent-no">🔔 Push: No</span>';
+
+  const consentBadges = `${smsBadge} · ${pushBadge}`;
 
   const allergiesRaw = (patient.allergies || '').trim();
   const hasFlaggedAllergies = allergiesRaw.length > 0 && !['none', 'no', 'n/a', 'nkda', 'none known'].includes(allergiesRaw.toLowerCase());
@@ -324,7 +337,7 @@ function buildPatientRow(patient, position) {
         <span class="row-detail">${escapeHTML(patient.reason)}</span>
         ${appointmentLine}
         ${allergyLine}
-        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine} · ${consentBadge}</span>
+        <span class="row-detail">🕒 Checked in ${escapeHTML(formatClockTime(patient.checkedInAt))} · 📞 ${escapeHTML(patient.phone)}${dobLine} · ${consentBadges}</span>
         ${patient.status === PATIENT_STATUS.CALLED ? '<span class="row-called-note">Called in - on their way</span>' : ''}
         ${patient.status === PATIENT_STATUS.NO_SHOW ? '<span class="row-called-note" style="color: var(--status-no-show);">Flagged as No-Show</span>' : ''}
       </div>
