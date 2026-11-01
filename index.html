@@ -166,8 +166,34 @@
           </div>
 
           <div class="form-row">
-            <label for="patient-dob">Date of Birth</label>
-            <input type="date" id="patient-dob" required>
+            <label id="dob-label">Date of Birth</label>
+            <!-- Hidden input stores the YYYY-MM-DD date value for the form submission -->
+            <input type="hidden" id="patient-dob" name="dob" required>
+
+            <!-- Apple-like 3-wheel Date Picker (Month, Day, Year) -->
+            <div class="ios-datepicker" role="group" aria-labelledby="dob-label">
+              <!-- Visual center highlight lens / selection band -->
+              <div class="ios-picker-highlight" aria-hidden="true"></div>
+
+              <!-- Top and bottom gradient fade overlays for drum/wheel effect -->
+              <div class="ios-picker-gradient-top" aria-hidden="true"></div>
+              <div class="ios-picker-gradient-bottom" aria-hidden="true"></div>
+
+              <!-- Column 1: Month Scroller -->
+              <div class="ios-picker-column" id="dob-month-column" tabindex="0" role="listbox" aria-label="Month">
+                <div class="ios-picker-wheel" id="dob-month-wheel"></div>
+              </div>
+
+              <!-- Column 2: Day Scroller -->
+              <div class="ios-picker-column" id="dob-day-column" tabindex="0" role="listbox" aria-label="Day">
+                <div class="ios-picker-wheel" id="dob-day-wheel"></div>
+              </div>
+
+              <!-- Column 3: Year Scroller -->
+              <div class="ios-picker-column" id="dob-year-column" tabindex="0" role="listbox" aria-label="Year">
+                <div class="ios-picker-wheel" id="dob-year-wheel"></div>
+              </div>
+            </div>
           </div>
 
           <div class="form-row">
