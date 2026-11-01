@@ -156,7 +156,9 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `reason` | `"Routine Checkup"` | Matches an `<option>` in the check-in form. |
 | `visitType` | `"walk-in"` | `VISIT_TYPE.WALK_IN` or `VISIT_TYPE.APPOINTMENT`. |
 | `appointmentTime` | `"14:30"` or `null` | 24-hour `HH:MM`. Only for appointments. |
-| `messagingConsent` | `false` | `true` if patient consented to receive SMS/push messages. Default `false`. |
+| `smsConsent` | `false` | `true` if patient consented to receive SMS updates. Default `false`. |
+| `pushConsent` | `false` | `true` if patient consented to receive push notifications. Default `false`. |
+| `messagingConsent` | `false` | Legacy consent flag (`true` if SMS or push opted in). Kept for backward compatibility. |
 | `allergies` | `"Penicillin, Latex"` | Known / flagged allergies (defaults to `""` if none). |
 | `checkedInAt` | `1695400000000` | `Date.now()` at check-in. |
 | `status` | `"waiting"` | `PATIENT_STATUS.WAITING` → `CALLED` → `DONE` or `NO_SHOW`. |

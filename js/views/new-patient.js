@@ -64,7 +64,8 @@ function handleCheckIn() {
     allergies: document.getElementById('patient-allergies').value.trim(),
     visitType: document.getElementById('visit-type').value,
     appointmentTime: document.getElementById('appointment-time').value,
-    messagingConsent: document.getElementById('patient-messaging-consent').checked
+    smsConsent: document.getElementById('patient-sms-consent').checked,
+    pushConsent: document.getElementById('patient-push-consent').checked
   };
 
   // The browser already blocks empty "required" fields, but a name of only

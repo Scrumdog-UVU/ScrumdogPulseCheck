@@ -117,9 +117,21 @@ function fillTicket(patient) {
     patient.visitType === VISIT_TYPE.APPOINTMENT
       ? `Appointment at ${formatAppointmentTime(patient.appointmentTime)}`
       : 'Walk-in';
-  document.getElementById('status-messaging-consent').textContent = patient.messagingConsent
-    ? 'Opted in (SMS / Push enabled)'
-    : 'Opted out (No SMS / Push)';
+
+  // Support separate SMS and Push consents with fallback to legacy messagingConsent
+  const hasSmsConsent = patient.smsConsent !== undefined
+    ? Boolean(patient.smsConsent)
+    : Boolean(patient.messagingConsent);
+  const hasPushConsent = patient.pushConsent !== undefined
+    ? Boolean(patient.pushConsent)
+    : Boolean(patient.messagingConsent);
+
+  document.getElementById('status-sms-consent').textContent = hasSmsConsent
+    ? 'Opted in (SMS enabled)'
+    : 'Opted out (No SMS)';
+  document.getElementById('status-push-consent').textContent = hasPushConsent
+    ? 'Opted in (Push enabled)'
+    : 'Opted out (No Push)';
 
   // The parts below change depending on the patient's status.
   const badge = document.getElementById('status-badge');
@@ -177,7 +189,7 @@ function fillTicket(patient) {
  *
  * The notification only appears when ALL of these are true:
  *   - staff have officially called the patient in (status is CALLED),
- *   - the patient ticked the SMS / push consent box when checking in, and
+ *   - the patient ticked the push notification consent box when checking in, and
  *   - the patient hasn't already closed it with the "x" button.
  *
  * @param {Object} patient - The patient whose "phone" this is.
@@ -185,8 +197,12 @@ function fillTicket(patient) {
 function fillTurnAlert(patient) {
   const alertBox = document.getElementById('status-turn-alert');
 
+  const hasPushConsent = patient.pushConsent !== undefined
+    ? Boolean(patient.pushConsent)
+    : Boolean(patient.messagingConsent);
+
   const shouldShow = patient.status === PATIENT_STATUS.CALLED &&
-    patient.messagingConsent &&
+    hasPushConsent &&
     !hasDismissedTurnAlert(patient.id);
 
   if (!shouldShow) {
