@@ -46,6 +46,7 @@
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/survey.css">
   <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/accepted-insurance.css">
 </head>
 <body>
 
@@ -216,6 +217,16 @@
 
           <button type="submit" class="btn btn-primary">Check In &amp; Hold My Place</button>
         </form>
+
+        <div class="insurance-link-wrapper">
+          <button type="button" class="btn-link insurance-link" data-go-to-view="accepted-insurance">
+            <svg class="insurance-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+            <span>Check accepted insurance plans before check-in &rarr;</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -516,6 +527,43 @@
       </div>
     </section>
 
+    <!-- =================================================================
+         VIEW 6: ACCEPTED INSURANCE
+         Displays a list of accepted insurance providers for patients before check-in.
+         Logic lives in: js/views/accepted-insurance.js
+         Styles live in: css/accepted-insurance.css
+         ================================================================= -->
+    <section id="view-accepted-insurance" class="view" hidden>
+      <h1 class="view-title" tabindex="-1">Accepted Insurance Plans</h1>
+      <p class="view-subtitle">PulseCheck accepts most major commercial, Medicare, Medicaid, and regional healthcare plans.</p>
+
+      <!-- Back button header link -->
+      <div class="insurance-back-bar">
+        <button type="button" class="btn btn-secondary btn-small" data-go-to-view="new-patient">&larr; Return to Patient Check-In</button>
+      </div>
+
+      <!-- Search bar for filtering insurances -->
+      <div class="card insurance-search-card">
+        <label for="insurance-search-input" class="search-label">Search Accepted Insurances</label>
+        <div class="search-input-wrapper">
+          <input type="search" id="insurance-search-input" placeholder="Search by provider name or plan type (e.g., PPO, HMO, Medicare)..." aria-label="Search accepted insurance providers">
+          <button type="button" id="insurance-search-clear-btn" class="btn btn-secondary btn-small" hidden>Clear</button>
+        </div>
+      </div>
+
+      <!-- Grid container for insurance cards -->
+      <div id="accepted-insurance-grid" class="insurance-grid"></div>
+
+      <!-- Note and Return button -->
+      <div class="card insurance-note-card">
+        <h3>Need help verifying coverage?</h3>
+        <p>If your insurance provider is not listed or you have questions regarding copays or pre-authorization, please contact our front desk staff before checking in.</p>
+        <div class="insurance-action-wrapper">
+          <button type="button" class="btn btn-primary" data-go-to-view="new-patient">&larr; Return to Patient Check-In</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer">
@@ -536,6 +584,7 @@
   <script src="js/views/admin.js"></script>
   <script src="js/views/survey.js"></script>
   <script src="js/views/dashboard.js"></script>
+  <script src="js/views/accepted-insurance.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

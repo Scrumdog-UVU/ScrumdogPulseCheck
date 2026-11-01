@@ -20,11 +20,12 @@
  *   - its top-bar button:                   data-view="new-patient"
  */
 const VIEWS = {
-  'new-patient':    { init: initNewPatientView,    render: renderNewPatientView },
-  'patient-status': { init: initPatientStatusView, render: renderPatientStatusView },
-  'admin':          { init: initAdminView,         render: renderAdminView },
-  'survey':         { init: initSurveyView,        render: renderSurveyView },
-  'dashboard':      { init: initDashboardView,     render: renderDashboardView }
+  'new-patient':        { init: initNewPatientView,        render: renderNewPatientView },
+  'patient-status':     { init: initPatientStatusView,     render: renderPatientStatusView },
+  'admin':              { init: initAdminView,             render: renderAdminView },
+  'survey':             { init: initSurveyView,            render: renderSurveyView },
+  'dashboard':          { init: initDashboardView,         render: renderDashboardView },
+  'accepted-insurance': { init: initAcceptedInsuranceView, render: renderAcceptedInsuranceView }
 };
 
 /** The view shown the very first time someone opens the app. */
@@ -85,7 +86,8 @@ const VIEW_PERMISSIONS = {
   'patient-status': 'canViewPatientStatus',
   'admin': 'canViewAdmin',
   'survey': 'canViewSurvey',
-  'dashboard': 'canViewDashboard'
+  'dashboard': 'canViewDashboard',
+  'accepted-insurance': 'canViewNewPatient'
 };
 
 /**
