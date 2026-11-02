@@ -404,6 +404,57 @@
         <div id="admin-noshow-list" class="queue-list"></div>
       </div>
 
+      <!-- Clinic Admin Today's Key Metrics Dashboard Card -->
+      <div id="admin-key-metrics-card" class="card admin-analytics-card">
+        <div class="analytics-header">
+          <div>
+            <h2 class="queue-title">Today's Key Metrics</h2>
+            <p class="queue-hint">At-a-glance operational metrics and volume for today's clinic visits.</p>
+          </div>
+          <span class="analytics-badge" id="admin-metrics-today-label">Today</span>
+        </div>
+        <div class="admin-metrics-grid" id="admin-key-metrics-grid">
+          <!-- Dynamically filled by renderKeyMetrics() in js/views/admin.js -->
+        </div>
+      </div>
+
+      <!-- Historical Wait-Time Reports Card (placed directly below Key Metrics) -->
+      <div id="admin-historical-waittime-card" class="card admin-analytics-card">
+        <div class="analytics-header">
+          <div>
+            <h2 class="queue-title">Historical Wait-Time Reports</h2>
+            <p class="queue-hint">Detailed breakdown and analytics of patient wait times over time.</p>
+          </div>
+          <div class="report-filters-group">
+            <label for="admin-waittime-period" class="sr-only">Report Timeframe</label>
+            <select id="admin-waittime-period" class="report-filter-select" aria-label="Select report timeframe">
+              <option value="all">All Time</option>
+              <option value="today">Today Only</option>
+              <option value="7days">Last 7 Days</option>
+            </select>
+            <label for="admin-waittime-type" class="sr-only">Visit Type</label>
+            <select id="admin-waittime-type" class="report-filter-select" aria-label="Select visit type">
+              <option value="all">All Visit Types</option>
+              <option value="walk-in">Walk-in Only</option>
+              <option value="appointment">Appointment Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Wait Time Summary Stats -->
+        <div class="waittime-summary-stats" id="admin-waittime-summary-stats">
+          <!-- Filled by renderHistoricalWaitTimeReports() -->
+        </div>
+
+        <!-- Hourly / Time-of-Day Wait Time Breakdown Table and Bar Chart -->
+        <div class="waittime-breakdown-section">
+          <h3 class="breakdown-subtitle">Wait Times by Hour &amp; Visit Type</h3>
+          <div id="admin-waittime-chart-container" class="waittime-chart-container">
+            <!-- Filled by renderHistoricalWaitTimeReports() -->
+          </div>
+        </div>
+      </div>
+
       <!-- Role-Based Access Control (RBAC) Permissions Management Card -->
       <div id="admin-permissions-card" class="card rbac-card" hidden>
         <h2 class="queue-title">Role-Based Access Control &amp; Permissions</h2>

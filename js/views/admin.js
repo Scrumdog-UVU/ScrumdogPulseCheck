@@ -102,6 +102,22 @@ function initAdminView() {
       renderAdminView();
     });
   }
+
+  // Event listeners for historical wait time report filter controls
+  const periodFilter = document.getElementById('admin-waittime-period');
+  const typeFilter = document.getElementById('admin-waittime-type');
+
+  if (periodFilter) {
+    periodFilter.addEventListener('change', () => {
+      renderHistoricalWaitTimeReports(getAllPatients());
+    });
+  }
+
+  if (typeFilter) {
+    typeFilter.addEventListener('change', () => {
+      renderHistoricalWaitTimeReports(getAllPatients());
+    });
+  }
 }
 
 /**
@@ -116,11 +132,21 @@ function handleAdminAction(action, patientId) {
     return;
   }
 
+  const now = Date.now();
   if (action === ADMIN_ACTIONS.CALL_IN) {
-    updatePatient(patientId, { status: PATIENT_STATUS.CALLED });
+    const existing = getPatientById(patientId);
+    updatePatient(patientId, {
+      status: PATIENT_STATUS.CALLED,
+      calledAt: (existing && existing.calledAt) ? existing.calledAt : now
+    });
 
   } else if (action === ADMIN_ACTIONS.MARK_DONE) {
-    updatePatient(patientId, { status: PATIENT_STATUS.DONE });
+    const existing = getPatientById(patientId);
+    updatePatient(patientId, {
+      status: PATIENT_STATUS.DONE,
+      calledAt: (existing && existing.calledAt) ? existing.calledAt : now,
+      completedAt: now
+    });
 
   } else if (action === ADMIN_ACTIONS.NO_SHOW) {
     updatePatient(patientId, { status: PATIENT_STATUS.NO_SHOW });
@@ -163,6 +189,12 @@ function renderAdminView() {
   const resetBtn = document.getElementById('admin-reset-btn');
   if (clearFinishedBtn) clearFinishedBtn.hidden = !canReset;
   if (resetBtn) resetBtn.hidden = !canReset;
+
+  // --- Today's Key Metrics Dashboard -----------------------------------
+  renderKeyMetrics(allPatients);
+
+  // --- Historical Wait-Time Reports (Just below key metrics) -----------
+  renderHistoricalWaitTimeReports(allPatients);
 
   // --- Role Permissions Management Matrix Card -------------------------
   renderPermissionsCard();
@@ -434,4 +466,358 @@ function renderPermissionsCard() {
   `;
 
   container.innerHTML = tableHtml;
+}
+
+/* ---------------------------------------------------------------------------
+ * TODAY'S KEY METRICS DASHBOARD
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Calculates and renders today's key operational metrics for clinic administration.
+ *
+ * @param {Array<Object>} allPatients - Full list of patient records.
+ */
+function renderKeyMetrics(allPatients) {
+  const grid = document.getElementById('admin-key-metrics-grid');
+  if (!grid) return;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  // Patients who checked in today
+  const todayPatients = allPatients.filter((p) => p.checkedInAt >= startOfToday);
+
+  // If there are patients in demo data with earlier timestamps but no today patients,
+  // we count all patients or today patients so the dashboard is informative in testing/demo.
+  const activeSet = todayPatients.length > 0 ? todayPatients : allPatients;
+  const isDemoFallback = todayPatients.length === 0 && allPatients.length > 0;
+
+  const todayLabel = document.getElementById('admin-metrics-today-label');
+  if (todayLabel) {
+    todayLabel.textContent = isDemoFallback ? 'All Demo Data' : 'Today';
+  }
+
+  // 1. Total Check-ins & breakdown
+  const totalCheckins = activeSet.length;
+  const walkinCount = activeSet.filter((p) => p.visitType === VISIT_TYPE.WALK_IN).length;
+  const appointmentCount = activeSet.filter((p) => p.visitType === VISIT_TYPE.APPOINTMENT).length;
+
+  // 2. Active Queue Volume
+  const waitingCount = activeSet.filter((p) => p.status === PATIENT_STATUS.WAITING).length;
+  const calledCount = activeSet.filter((p) => p.status === PATIENT_STATUS.CALLED).length;
+  const inQueueCount = waitingCount + calledCount;
+
+  // 3. Completed Visits
+  const doneCount = activeSet.filter((p) => p.status === PATIENT_STATUS.DONE).length;
+  const completionRate = totalCheckins > 0 ? Math.round((doneCount / totalCheckins) * 100) : 0;
+
+  // 4. Average Wait Time (time from check-in until called or done)
+  const waitTimesMinutes = [];
+  activeSet.forEach((patient) => {
+    // If called or done, calculate actual wait time; if waiting, calculate current elapsed wait
+    if (patient.calledAt && patient.calledAt >= patient.checkedInAt) {
+      waitTimesMinutes.push(Math.round((patient.calledAt - patient.checkedInAt) / 60000));
+    } else if (patient.completedAt && patient.completedAt >= patient.checkedInAt) {
+      waitTimesMinutes.push(Math.round((patient.completedAt - patient.checkedInAt) / 60000));
+    } else if (patient.status === PATIENT_STATUS.CALLED || patient.status === PATIENT_STATUS.DONE) {
+      // Fallback estimate for records without calledAt
+      waitTimesMinutes.push(MINUTES_PER_PATIENT);
+    } else if (patient.status === PATIENT_STATUS.WAITING) {
+      waitTimesMinutes.push(Math.max(0, Math.round((Date.now() - patient.checkedInAt) / 60000)));
+    }
+  });
+
+  const avgWait = waitTimesMinutes.length > 0
+    ? Math.round(waitTimesMinutes.reduce((sum, val) => sum + val, 0) / waitTimesMinutes.length)
+    : 0;
+
+  // 5. Peak Check-in Hour
+  const hourCounts = {};
+  activeSet.forEach((p) => {
+    const hour = new Date(p.checkedInAt).getHours();
+    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+  });
+
+  let peakHour = null;
+  let peakHourMax = 0;
+  Object.keys(hourCounts).forEach((hourStr) => {
+    const count = hourCounts[hourStr];
+    if (count > peakHourMax) {
+      peakHourMax = count;
+      peakHour = Number(hourStr);
+    }
+  });
+
+  let peakHourDisplay = 'None';
+  if (peakHour !== null) {
+    const ampm = peakHour >= 12 ? 'PM' : 'AM';
+    const displayH = peakHour % 12 === 0 ? 12 : peakHour % 12;
+    peakHourDisplay = `${displayH}:00 ${ampm} (${peakHourMax} pts)`;
+  }
+
+  // 6. No-Show Rate
+  const noshowCount = activeSet.filter((p) => p.status === PATIENT_STATUS.NO_SHOW).length;
+  const noshowRate = totalCheckins > 0 ? Math.round((noshowCount / totalCheckins) * 100) : 0;
+
+  grid.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-blue">👥</div>
+      <div class="metric-body">
+        <span class="metric-value">${totalCheckins}</span>
+        <span class="metric-title">Total Check-Ins</span>
+        <span class="metric-sub">${walkinCount} walk-ins · ${appointmentCount} appts</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-teal">⏳</div>
+      <div class="metric-body">
+        <span class="metric-value">${inQueueCount}</span>
+        <span class="metric-title">In Queue Now</span>
+        <span class="metric-sub">${waitingCount} waiting · ${calledCount} called</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-green">✅</div>
+      <div class="metric-body">
+        <span class="metric-value">${doneCount}</span>
+        <span class="metric-title">Completed Visits</span>
+        <span class="metric-sub">${completionRate}% completion rate</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-amber">⏱️</div>
+      <div class="metric-body">
+        <span class="metric-value">${avgWait} <small>mins</small></span>
+        <span class="metric-title">Avg Wait Time</span>
+        <span class="metric-sub">Across ${waitTimesMinutes.length} recorded patients</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-purple">📊</div>
+      <div class="metric-body">
+        <span class="metric-value metric-value-sm">${escapeHTML(peakHourDisplay)}</span>
+        <span class="metric-title">Peak Arrival Window</span>
+        <span class="metric-sub">Busiest intake hour</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon-red">🚫</div>
+      <div class="metric-body">
+        <span class="metric-value">${noshowCount} <small>(${noshowRate}%)</small></span>
+        <span class="metric-title">No-Show Patients</span>
+        <span class="metric-sub">Missed queue call-ins</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------------------------
+ * HISTORICAL WAIT-TIME REPORTS (Placed just below Key Metrics)
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Calculates and renders historical wait-time statistics, distributions, and
+ * hourly/type breakdowns.
+ *
+ * @param {Array<Object>} allPatients - Full list of patient records.
+ */
+function renderHistoricalWaitTimeReports(allPatients) {
+  const summaryContainer = document.getElementById('admin-waittime-summary-stats');
+  const chartContainer = document.getElementById('admin-waittime-chart-container');
+  if (!summaryContainer || !chartContainer) return;
+
+  const periodSelect = document.getElementById('admin-waittime-period');
+  const typeSelect = document.getElementById('admin-waittime-type');
+  const selectedPeriod = periodSelect ? periodSelect.value : 'all';
+  const selectedType = typeSelect ? typeSelect.value : 'all';
+
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  // Filter patients by timeframe
+  let filteredPatients = allPatients.filter((p) => {
+    if (selectedPeriod === 'today') {
+      return p.checkedInAt >= startOfToday.getTime();
+    } else if (selectedPeriod === '7days') {
+      return p.checkedInAt >= (now - (7 * oneDayMs));
+    }
+    return true; // 'all'
+  });
+
+  // Filter patients by visit type
+  if (selectedType !== 'all') {
+    filteredPatients = filteredPatients.filter((p) => p.visitType === selectedType);
+  }
+
+  // Calculate wait duration in minutes for each patient in sample
+  const recordsWithWait = filteredPatients.map((patient) => {
+    let waitMins = 0;
+    if (patient.calledAt && patient.calledAt >= patient.checkedInAt) {
+      waitMins = Math.round((patient.calledAt - patient.checkedInAt) / 60000);
+    } else if (patient.completedAt && patient.completedAt >= patient.checkedInAt) {
+      waitMins = Math.round((patient.completedAt - patient.checkedInAt) / 60000);
+    } else if (patient.status === PATIENT_STATUS.CALLED || patient.status === PATIENT_STATUS.DONE) {
+      waitMins = MINUTES_PER_PATIENT;
+    } else {
+      waitMins = Math.max(0, Math.round((now - patient.checkedInAt) / 60000));
+    }
+
+    return {
+      patient,
+      waitMins,
+      hour: new Date(patient.checkedInAt).getHours(),
+      dateStr: new Date(patient.checkedInAt).toLocaleDateString()
+    };
+  });
+
+  const waitValues = recordsWithWait.map((r) => r.waitMins).sort((a, b) => a - b);
+
+  // If no data
+  if (waitValues.length === 0) {
+    summaryContainer.innerHTML = '<p class="empty-msg">No wait time records found for the selected filter criteria.</p>';
+    chartContainer.innerHTML = '';
+    return;
+  }
+
+  // Summary Math: Avg, Median, Max, Min
+  const sum = waitValues.reduce((acc, v) => acc + v, 0);
+  const avgWait = Math.round(sum / waitValues.length);
+  const minWait = waitValues[0];
+  const maxWait = waitValues[waitValues.length - 1];
+
+  let medianWait = 0;
+  const mid = Math.floor(waitValues.length / 2);
+  if (waitValues.length % 2 !== 0) {
+    medianWait = waitValues[mid];
+  } else {
+    medianWait = Math.round((waitValues[mid - 1] + waitValues[mid]) / 2);
+  }
+
+  // Walk-in vs Appointment Avg
+  const walkinRecords = recordsWithWait.filter((r) => r.patient.visitType === VISIT_TYPE.WALK_IN);
+  const apptRecords = recordsWithWait.filter((r) => r.patient.visitType === VISIT_TYPE.APPOINTMENT);
+
+  const avgWalkin = walkinRecords.length > 0
+    ? Math.round(walkinRecords.reduce((s, r) => s + r.waitMins, 0) / walkinRecords.length)
+    : 0;
+  const avgAppt = apptRecords.length > 0
+    ? Math.round(apptRecords.reduce((s, r) => s + r.waitMins, 0) / apptRecords.length)
+    : 0;
+
+  summaryContainer.innerHTML = `
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${avgWait} <small>min</small></span>
+      <span class="waittime-stat-lbl">Average Wait</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${medianWait} <small>min</small></span>
+      <span class="waittime-stat-lbl">Median Wait</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${maxWait} <small>min</small></span>
+      <span class="waittime-stat-lbl">Max Wait</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${minWait} <small>min</small></span>
+      <span class="waittime-stat-lbl">Min Wait</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${avgWalkin} <small>min</small></span>
+      <span class="waittime-stat-lbl">Avg Walk-in</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${avgAppt} <small>min</small></span>
+      <span class="waittime-stat-lbl">Avg Appointment</span>
+    </div>
+  `;
+
+  // Hourly Breakdown Calculation
+  const hourlyData = {};
+  for (let h = 7; h <= 18; h++) {
+    hourlyData[h] = { hour: h, count: 0, totalWait: 0, walkinCount: 0, apptCount: 0 };
+  }
+
+  recordsWithWait.forEach((r) => {
+    const h = r.hour;
+    if (!hourlyData[h]) {
+      hourlyData[h] = { hour: h, count: 0, totalWait: 0, walkinCount: 0, apptCount: 0 };
+    }
+    hourlyData[h].count += 1;
+    hourlyData[h].totalWait += r.waitMins;
+    if (r.patient.visitType === VISIT_TYPE.WALK_IN) {
+      hourlyData[h].walkinCount += 1;
+    } else {
+      hourlyData[h].apptCount += 1;
+    }
+  });
+
+  const activeHours = Object.values(hourlyData)
+    .filter((slot) => slot.count > 0 || (slot.hour >= 8 && slot.hour <= 17))
+    .sort((a, b) => a.hour - b.hour);
+
+  const highestAvgHourly = Math.max(
+    ...activeHours.map((slot) => (slot.count > 0 ? Math.round(slot.totalWait / slot.count) : 0)),
+    30
+  );
+
+  let chartHtml = `
+    <div class="report-table-wrapper">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Time of Day</th>
+            <th>Patient Volume</th>
+            <th>Walk-ins</th>
+            <th>Appts</th>
+            <th>Average Wait</th>
+            <th class="report-visual-col">Wait-Time Indicator</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  activeHours.forEach((slot) => {
+    const slotAvg = slot.count > 0 ? Math.round(slot.totalWait / slot.count) : 0;
+    const ampm = slot.hour >= 12 ? 'PM' : 'AM';
+    const displayH = slot.hour % 12 === 0 ? 12 : slot.hour % 12;
+    const timeLabel = `${displayH}:00 ${ampm}`;
+    const barPercentage = Math.min(100, Math.round((slotAvg / highestAvgHourly) * 100));
+
+    let barColorClass = 'bar-normal';
+    if (slotAvg >= 30) {
+      barColorClass = 'bar-critical';
+    } else if (slotAvg >= 20) {
+      barColorClass = 'bar-warning';
+    }
+
+    chartHtml += `
+      <tr>
+        <td class="report-time-cell">${escapeHTML(timeLabel)}</td>
+        <td><strong>${slot.count}</strong> pts</td>
+        <td>${slot.walkinCount}</td>
+        <td>${slot.apptCount}</td>
+        <td><strong>${slotAvg} mins</strong></td>
+        <td class="report-visual-col">
+          <div class="report-bar-track" title="${slotAvg} mins average wait">
+            <div class="report-bar-fill ${barColorClass}" style="width: ${barPercentage}%"></div>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  chartHtml += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  chartContainer.innerHTML = chartHtml;
 }
