@@ -31,6 +31,8 @@
  *     messagingConsent: false                 // legacy consent flag kept for backward compatibility
  *     allergies:       "Penicillin"           // known/flagged allergies (optional string, defaults to "")
  *     checkedInAt:     1695400000000          // Date.now() when they checked in
+ *     calledAt:        1695400600000 or null  // Date.now() when called to desk
+ *     completedAt:     1695401800000 or null  // Date.now() when visit marked complete
  *     status:          "waiting"              // one of PATIENT_STATUS below
  *   }
  */
@@ -220,6 +222,8 @@ function addPatient(details) {
     messagingConsent: smsConsent || pushConsent,
     allergies: details.allergies ? details.allergies.trim() : '',
     checkedInAt: now,
+    calledAt: null,
+    completedAt: null,
     status: PATIENT_STATUS.WAITING
   };
 
