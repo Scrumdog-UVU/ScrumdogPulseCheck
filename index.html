@@ -234,6 +234,34 @@
             <input type="time" id="appointment-time">
           </div>
 
+          <!-- PRIVACY SUMMARY: "Your Privacy at a Glance"
+               A short, plain-language summary of how we handle the patient's
+               information. It sits directly ABOVE the two consent boxes on
+               purpose, so the patient reads it before deciding to opt in.
+               It is plain text: edit the wording right here (no JavaScript).
+               This is demo wording. A real clinic should have it reviewed
+               against its full privacy policy.
+               Styles live in: css/new-patient.css (.privacy-summary) -->
+          <div class="privacy-summary" role="region" aria-labelledby="privacy-summary-title">
+            <h2 id="privacy-summary-title" class="privacy-summary-title">
+              <!-- A padlock icon. aria-hidden: screen readers skip it. -->
+              <svg class="privacy-summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Your Privacy at a Glance</span>
+            </h2>
+            <p class="privacy-summary-intro">Please read this before you choose your message settings below.</p>
+            <ul class="privacy-summary-list">
+              <li><strong>What we collect:</strong> the details on this form: your name, date of birth, phone number, reason for visit, allergies, and appointment time.</li>
+              <li><strong>Why we need it:</strong> to hold your place in line, estimate your wait, and help our staff get ready for your visit.</li>
+              <li><strong>Who can see it:</strong> clinic staff only. Other patients never see your name or health details.</li>
+              <li><strong>Messages:</strong> if you opt in, we only contact you about this visit, such as when it's your turn. Notifications show your ticket number, not your name. We never send ads or sell your number.</li>
+              <li><strong>Your choice:</strong> messages are optional. You can check in without them, and you can opt out any time by asking the front desk.</li>
+            </ul>
+            <p class="privacy-summary-footnote">Questions? Ask the front desk for our full privacy policy.</p>
+          </div>
+
           <div class="form-row form-row-checkbox">
             <label class="checkbox-label" for="patient-sms-consent">
               <input type="checkbox" id="patient-sms-consent">
