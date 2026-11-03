@@ -122,11 +122,27 @@
 .row-done    { border-left-color: var(--status-done); opacity: 0.7; }
 .row-no-show { border-left-color: var(--status-no-show); opacity: 0.85; }
 
+/* Urgent row highlighting and priority styling */
+.row-urgent {
+  border-left-color: var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+[data-theme="light"] .row-urgent {
+  background-color: #fff1f2;
+  border-color: #fca5a5;
+}
+
 .row-position {
   font-weight: 800;
   font-size: 1.1rem;
   color: var(--accent-color);
   min-width: 2rem;
+}
+
+.row-position-urgent {
+  color: var(--danger-color);
 }
 
 .row-info {
@@ -158,6 +174,50 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--status-called);
+}
+
+/* Urgent patient badge */
+.urgent-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background-color: var(--danger-color);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+/* Flag / Unflag Urgent buttons */
+.btn-urgent-flag {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.btn-urgent-flag:hover {
+  background-color: var(--danger-color);
+  color: #fff;
+  border-color: var(--danger-hover);
+}
+
+[data-theme="light"] .btn-urgent-flag {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+[data-theme="light"] .btn-urgent-flag:hover {
+  background-color: var(--danger-color);
+  color: #fff;
+}
+
+.btn-urgent-unflag {
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 /* Consent status badges in Staff View patient rows */

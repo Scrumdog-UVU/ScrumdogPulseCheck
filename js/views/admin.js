@@ -19,10 +19,12 @@
  * each one does.
  */
 const ADMIN_ACTIONS = {
-  CALL_IN: 'call-in',     // WAITING -> CALLED
-  MARK_DONE: 'mark-done', // CALLED  -> DONE
-  NO_SHOW: 'no-show',     // WAITING/CALLED -> NO_SHOW
-  REMOVE: 'remove'        // delete the patient entirely
+  CALL_IN: 'call-in',         // WAITING -> CALLED
+  MARK_DONE: 'mark-done',     // CALLED  -> DONE
+  NO_SHOW: 'no-show',         // WAITING/CALLED -> NO_SHOW
+  FLAG_URGENT: 'flag-urgent', // Flag as urgent to skip queue
+  UNFLAG_URGENT: 'unflag-urgent', // Remove urgent priority
+  REMOVE: 'remove'            // delete the patient entirely
 };
 
 /**
@@ -150,6 +152,12 @@ function handleAdminAction(action, patientId) {
 
   } else if (action === ADMIN_ACTIONS.NO_SHOW) {
     updatePatient(patientId, { status: PATIENT_STATUS.NO_SHOW });
+
+  } else if (action === ADMIN_ACTIONS.FLAG_URGENT) {
+    updatePatient(patientId, { isUrgent: true });
+
+  } else if (action === ADMIN_ACTIONS.UNFLAG_URGENT) {
+    updatePatient(patientId, { isUrgent: false });
 
   } else if (action === ADMIN_ACTIONS.REMOVE) {
     if (!confirm('Remove this patient from the queue?')) return;
@@ -339,7 +347,11 @@ function buildPatientRow(patient, position) {
   let buttons = '';
   if (canManage) {
     if (patient.status === PATIENT_STATUS.WAITING) {
+      const urgentBtn = patient.isUrgent
+        ? actionButton(ADMIN_ACTIONS.UNFLAG_URGENT, 'Unflag Urgent', 'btn-secondary btn-urgent-unflag', patient.id)
+        : actionButton(ADMIN_ACTIONS.FLAG_URGENT, 'Flag Urgent', 'btn-urgent-flag', patient.id);
       buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
+                urgentBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
                 actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
     } else if (patient.status === PATIENT_STATUS.CALLED) {
@@ -357,13 +369,20 @@ function buildPatientRow(patient, position) {
   // Finished and No-Show patients don't have a place in line, so no "#1" badge for them.
   const positionBadge = (patient.status === PATIENT_STATUS.DONE || patient.status === PATIENT_STATUS.NO_SHOW)
     ? ''
-    : `<span class="row-position">#${position}</span>`;
+    : `<span class="row-position ${patient.isUrgent ? 'row-position-urgent' : ''}">#${position}</span>`;
+
+  const urgentBadge = patient.isUrgent
+    ? '<span class="urgent-tag" aria-label="Flagged as urgent">🚨 URGENT</span>'
+    : '';
+
+  const urgentRowClass = patient.isUrgent ? 'row-urgent' : '';
 
   return `
-    <div class="patient-row row-${escapeHTML(patient.status)}">
+    <div class="patient-row row-${escapeHTML(patient.status)} ${urgentRowClass}">
       ${positionBadge}
       <div class="row-info">
         <span class="row-name">${escapeHTML(patient.name)}
+          ${urgentBadge}
           <span class="row-ticket">${escapeHTML(patient.ticketNumber)}</span>
         </span>
         <span class="row-detail">${escapeHTML(patient.reason)}</span>

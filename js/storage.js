@@ -34,6 +34,7 @@
  *     calledAt:        1695400600000 or null  // Date.now() when called to desk
  *     completedAt:     1695401800000 or null  // Date.now() when visit marked complete
  *     status:          "waiting"              // one of PATIENT_STATUS below
+ *     isUrgent:        false                  // true if flagged as urgent by nurse/staff to skip queue
  *   }
  */
 
@@ -224,7 +225,8 @@ function addPatient(details) {
     checkedInAt: now,
     calledAt: null,
     completedAt: null,
-    status: PATIENT_STATUS.WAITING
+    status: PATIENT_STATUS.WAITING,
+    isUrgent: Boolean(details.isUrgent)
   };
 
   const patients = getAllPatients();

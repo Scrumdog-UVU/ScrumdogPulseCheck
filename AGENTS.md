@@ -164,10 +164,12 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `calledAt` | `1695400600000` or `null` | `Date.now()` when staff called the patient in. |
 | `completedAt` | `1695401800000` or `null` | `Date.now()` when visit marked done. |
 | `status` | `"waiting"` | `PATIENT_STATUS.WAITING` → `CALLED` → `DONE` or `NO_SHOW`. |
+| `isUrgent` | `false` | `true` if flagged as urgent by nurse/staff to skip queue. Default `false`. |
 
 Queue rules (in `js/queue.js`):
 - Two separate queues: **appointments** (sorted by `appointmentTime`) and
   **walk-ins** (sorted by `checkedInAt`).
+- Urgent patients are prioritized ahead of non-urgent patients to skip the queue.
 - A patient is "in line" while their status is `waiting` or `called`.
 - Estimated wait = people ahead × `MINUTES_PER_PATIENT`.
 

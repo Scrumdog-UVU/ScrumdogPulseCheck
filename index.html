@@ -303,7 +303,10 @@
 
         <div id="status-ticket" class="card ticket-card">
           <div class="ticket-header">
-            <span id="status-badge" class="status-badge" aria-live="polite" role="status">Waiting</span>
+            <div class="status-badges-group">
+              <span id="status-badge" class="status-badge" aria-live="polite" role="status">Waiting</span>
+              <span id="status-urgent-badge" class="urgent-status-badge" aria-live="polite" role="status" hidden>🚨 Urgent Priority</span>
+            </div>
             <span id="status-ticket-number" class="ticket-number">#T-000</span>
           </div>
 

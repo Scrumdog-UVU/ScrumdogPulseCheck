@@ -7,6 +7,7 @@
  *
  * HOW THE LINE WORKS
  *   - There are two separate queues: Scheduled Appointments and Walk-ins.
+ *   - Patients flagged as urgent skip ahead of non-urgent patients.
  *   - Appointments are ordered by appointment time (earliest first).
  *   - Walk-ins are ordered by when they checked in (earliest first).
  *   - A patient is "in line" while their status is WAITING or CALLED.
@@ -36,17 +37,30 @@ function getQueue(visitType) {
   );
 
   if (visitType === VISIT_TYPE.APPOINTMENT) {
-    // "09:00" comes before "14:30" alphabetically, so a text comparison
-    // puts earlier appointments first. If two appointments share a time,
-    // whoever checked in first goes first.
-    return patientsInLine.sort((a, b) =>
-      (a.appointmentTime || '').localeCompare(b.appointmentTime || '') ||
-      a.checkedInAt - b.checkedInAt
-    );
+    // Urgent appointments come first to skip the queue.
+    // Within each group, "09:00" comes before "14:30" alphabetically.
+    // If two appointments share a time, whoever checked in first goes first.
+    return patientsInLine.sort((a, b) => {
+      const aUrgent = Boolean(a.isUrgent);
+      const bUrgent = Boolean(b.isUrgent);
+      if (aUrgent !== bUrgent) {
+        return aUrgent ? -1 : 1;
+      }
+      return (a.appointmentTime || '').localeCompare(b.appointmentTime || '') ||
+        a.checkedInAt - b.checkedInAt;
+    });
   }
 
-  // Walk-ins: first come, first served.
-  return patientsInLine.sort((a, b) => a.checkedInAt - b.checkedInAt);
+  // Walk-ins: urgent patients come first to skip the queue.
+  // Within each group, first come, first served by check-in time.
+  return patientsInLine.sort((a, b) => {
+    const aUrgent = Boolean(a.isUrgent);
+    const bUrgent = Boolean(b.isUrgent);
+    if (aUrgent !== bUrgent) {
+      return aUrgent ? -1 : 1;
+    }
+    return a.checkedInAt - b.checkedInAt;
+  });
 }
 
 /**

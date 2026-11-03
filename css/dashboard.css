@@ -235,12 +235,37 @@
 .dashboard-row-called    { border-left-color: var(--status-called); }
 /* Listed after the others so it wins when a row has two of these classes. */
 .dashboard-row-long-wait { border-left-color: var(--danger-color); }
+.dashboard-row-urgent    {
+  border-left-color: var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+[data-theme="light"] .dashboard-row-urgent {
+  background-color: #fff1f2;
+  border-color: #fca5a5;
+}
+
+.dashboard-serving-tile-urgent {
+  border-left: 4px solid var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+[data-theme="light"] .dashboard-serving-tile-urgent {
+  background-color: #fff1f2;
+  border-color: #fca5a5;
+}
 
 .dashboard-row-position {
   font-weight: 800;
   font-size: 1.1rem;
   color: var(--accent-color);
   min-width: 2rem;
+}
+
+.dashboard-row-position-urgent {
+  color: var(--danger-color);
 }
 
 .dashboard-row-info {
@@ -305,6 +330,7 @@
 .dashboard-tag-next      { color: var(--accent-color); }
 .dashboard-tag-called    { color: var(--status-called); }
 .dashboard-tag-long-wait { color: var(--danger-color); }
+.dashboard-tag-urgent    { color: #fff; background-color: var(--danger-color); border-color: var(--danger-color); }
 
 /* ---------------------------------------------------------------------------
  * BUTTON AT THE BOTTOM ("Manage Patients in Staff View")
