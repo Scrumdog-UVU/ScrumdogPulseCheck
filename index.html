@@ -251,7 +251,7 @@
               </svg>
               <span>Your Privacy at a Glance</span>
             </h2>
-            <p class="privacy-summary-intro">Please read this before you choose your message settings below.</p>
+            <p class="privacy-summary-intro">Please read this before you agree below and choose your message settings.</p>
             <ul class="privacy-summary-list">
               <li><strong>What we collect:</strong> the details on this form: your name, date of birth, phone number, reason for visit, allergies, and appointment time.</li>
               <li><strong>Why we need it:</strong> to hold your place in line, estimate your wait, and help our staff get ready for your visit.</li>
@@ -260,6 +260,16 @@
               <li><strong>Your choice:</strong> messages are optional. You can check in without them, and you can opt out any time by asking the front desk.</li>
             </ul>
             <p class="privacy-summary-footnote">Questions? Ask the front desk for our full privacy policy.</p>
+          </div>
+
+          <!-- Privacy agreement. "required" means the browser will not let the
+               patient check in until this box is ticked. (The SMS and push
+               boxes below stay optional.) -->
+          <div class="form-row form-row-checkbox">
+            <label class="checkbox-label" for="patient-privacy-consent">
+              <input type="checkbox" id="patient-privacy-consent" required>
+              <span>I have read the privacy summary above and agree to how the clinic uses my information. <strong>(Required)</strong></span>
+            </label>
           </div>
 
           <div class="form-row form-row-checkbox">
