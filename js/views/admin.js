@@ -19,10 +19,11 @@
  * each one does.
  */
 const ADMIN_ACTIONS = {
-  CALL_IN: 'call-in',     // WAITING -> CALLED
-  MARK_DONE: 'mark-done', // CALLED  -> DONE
-  NO_SHOW: 'no-show',     // WAITING/CALLED -> NO_SHOW
-  REMOVE: 'remove'        // delete the patient entirely
+  CALL_IN: 'call-in',         // WAITING -> CALLED
+  MARK_DONE: 'mark-done',     // CALLED  -> DONE
+  TOGGLE_URGENT: 'toggle-urgent', // toggle isUrgent flag (true/false)
+  NO_SHOW: 'no-show',         // WAITING/CALLED -> NO_SHOW
+  REMOVE: 'remove'            // delete the patient entirely
 };
 
 /**
@@ -147,6 +148,12 @@ function handleAdminAction(action, patientId) {
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now,
       completedAt: now
     });
+
+  } else if (action === ADMIN_ACTIONS.TOGGLE_URGENT) {
+    const existing = getPatientById(patientId);
+    if (existing) {
+      updatePatient(patientId, { isUrgent: !existing.isUrgent });
+    }
 
   } else if (action === ADMIN_ACTIONS.NO_SHOW) {
     updatePatient(patientId, { status: PATIENT_STATUS.NO_SHOW });
@@ -338,12 +345,21 @@ function buildPatientRow(patient, position) {
   // Which buttons to show depends on where the patient is in their visit.
   let buttons = '';
   if (canManage) {
+    const isUrgent = Boolean(patient.isUrgent);
+    const urgentButtonLabel = isUrgent ? 'Unflag Urgent' : 'Flag Urgent';
+    const urgentButtonStyle = isUrgent ? 'btn-urgent-active' : 'btn-secondary';
+    const urgentBtn = (patient.status === PATIENT_STATUS.WAITING || patient.status === PATIENT_STATUS.CALLED)
+      ? actionButton(ADMIN_ACTIONS.TOGGLE_URGENT, urgentButtonLabel, urgentButtonStyle, patient.id)
+      : '';
+
     if (patient.status === PATIENT_STATUS.WAITING) {
       buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
+                urgentBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
                 actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
     } else if (patient.status === PATIENT_STATUS.CALLED) {
       buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
+                urgentBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
                 actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
     } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
@@ -354,17 +370,25 @@ function buildPatientRow(patient, position) {
   }
   // DONE patients get no buttons.
 
+  // Urgent badge tag
+  const urgentTag = patient.isUrgent
+    ? '<span class="urgent-tag" title="Urgent patient prioritized to skip queue">🚨 Urgent Priority</span>'
+    : '';
+
   // Finished and No-Show patients don't have a place in line, so no "#1" badge for them.
   const positionBadge = (patient.status === PATIENT_STATUS.DONE || patient.status === PATIENT_STATUS.NO_SHOW)
     ? ''
     : `<span class="row-position">#${position}</span>`;
 
+  const urgentRowClass = patient.isUrgent && patient.status !== PATIENT_STATUS.DONE ? 'row-urgent' : '';
+
   return `
-    <div class="patient-row row-${escapeHTML(patient.status)}">
+    <div class="patient-row row-${escapeHTML(patient.status)} ${urgentRowClass}">
       ${positionBadge}
       <div class="row-info">
         <span class="row-name">${escapeHTML(patient.name)}
           <span class="row-ticket">${escapeHTML(patient.ticketNumber)}</span>
+          ${urgentTag}
         </span>
         <span class="row-detail">${escapeHTML(patient.reason)}</span>
         ${appointmentLine}

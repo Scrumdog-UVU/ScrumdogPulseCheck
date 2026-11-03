@@ -234,6 +234,9 @@ function buildDashboardQueueRow(patient, position, isNext, now) {
 
   // Small labels on the right. Each one has words, not just a color.
   const tags = [];
+  if (patient.isUrgent) {
+    tags.push('<span class="dashboard-tag dashboard-tag-urgent">🚨 Urgent Priority</span>');
+  }
   if (patient.status === PATIENT_STATUS.CALLED) {
     tags.push('<span class="dashboard-tag dashboard-tag-called">Called in</span>');
   }
@@ -251,9 +254,10 @@ function buildDashboardQueueRow(patient, position, isNext, now) {
 
   // The row's CSS class sets the colored left border (see css/dashboard.css).
   const longWaitClass = isLongWait ? 'dashboard-row-long-wait' : '';
+  const urgentRowClass = patient.isUrgent ? 'dashboard-row-urgent' : '';
 
   return `
-    <div class="dashboard-row dashboard-row-${escapeHTML(patient.status)} ${longWaitClass}">
+    <div class="dashboard-row dashboard-row-${escapeHTML(patient.status)} ${longWaitClass} ${urgentRowClass}">
       <span class="dashboard-row-position">#${position}</span>
       <div class="dashboard-row-info">
         <span class="dashboard-row-name">${escapeHTML(patient.name)}
