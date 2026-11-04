@@ -139,6 +139,12 @@ function fillTicket(patient) {
   const stats = document.getElementById('status-stats');
   const cancelButton = document.getElementById('status-cancel-btn');
 
+  // Urgent priority badge on ticket
+  const urgentBadge = document.getElementById('status-urgent-badge');
+  if (urgentBadge) {
+    urgentBadge.hidden = !patient.isUrgent || patient.status === PATIENT_STATUS.DONE || patient.status === PATIENT_STATUS.NO_SHOW;
+  }
+
   // The badge's CSS class (status-waiting / status-called / status-done)
   // controls its color. See css/patient-status.css.
   badge.className = `status-badge status-${patient.status}`;
@@ -146,9 +152,15 @@ function fillTicket(patient) {
   if (patient.status === PATIENT_STATUS.WAITING) {
     const spot = getQueuePosition(patient);
     badge.textContent = 'Waiting';
-    message.textContent = spot.position === 1
-      ? "You're next! Please be ready to head to the front desk."
-      : "You're checked in. We'll call you when it's your turn.";
+    if (patient.isUrgent) {
+      message.textContent = spot.position === 1
+        ? "Priority status: You're next! Please be ready to head to the front desk."
+        : "Priority status: You've been flagged for urgent care and prioritized in line.";
+    } else {
+      message.textContent = spot.position === 1
+        ? "You're next! Please be ready to head to the front desk."
+        : "You're checked in. We'll call you when it's your turn.";
+    }
     document.getElementById('status-position').textContent = `#${spot.position} of ${spot.queueLength}`;
     document.getElementById('status-wait').textContent = formatWaitTime(estimateWaitMinutes(spot.peopleAhead));
     stats.hidden = false;

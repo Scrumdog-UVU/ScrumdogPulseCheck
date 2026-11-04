@@ -235,6 +235,15 @@
 .dashboard-row-called    { border-left-color: var(--status-called); }
 /* Listed after the others so it wins when a row has two of these classes. */
 .dashboard-row-long-wait { border-left-color: var(--danger-color); }
+.dashboard-row-urgent    {
+  border-left-color: #f43f5e !important;
+  background-color: rgba(244, 63, 94, 0.08);
+}
+
+[data-theme="light"] .dashboard-row-urgent {
+  background-color: #fff1f2;
+  border-left-color: #e11d48 !important;
+}
 
 .dashboard-row-position {
   font-weight: 800;
@@ -305,6 +314,11 @@
 .dashboard-tag-next      { color: var(--accent-color); }
 .dashboard-tag-called    { color: var(--status-called); }
 .dashboard-tag-long-wait { color: var(--danger-color); }
+.dashboard-tag-urgent    {
+  color: #fff;
+  background-color: #e11d48;
+  border-color: #be123c;
+}
 
 /* ---------------------------------------------------------------------------
  * BUTTON AT THE BOTTOM ("Manage Patients in Staff View")

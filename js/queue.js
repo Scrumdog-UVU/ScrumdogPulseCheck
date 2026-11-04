@@ -7,8 +7,9 @@
  *
  * HOW THE LINE WORKS
  *   - There are two separate queues: Scheduled Appointments and Walk-ins.
- *   - Appointments are ordered by appointment time (earliest first).
- *   - Walk-ins are ordered by when they checked in (earliest first).
+ *   - Urgent patients (flagged by clinical staff/nurse) skip the queue and are prioritized first.
+ *   - Appointments are ordered by urgent status first, then appointment time (earliest first).
+ *   - Walk-ins are ordered by urgent status first, then check-in time (earliest first).
  *   - A patient is "in line" while their status is WAITING or CALLED.
  *     Once they are DONE they leave the line.
  *
@@ -36,17 +37,22 @@ function getQueue(visitType) {
   );
 
   if (visitType === VISIT_TYPE.APPOINTMENT) {
+    // Urgent patients skip to the front of the appointments line.
     // "09:00" comes before "14:30" alphabetically, so a text comparison
     // puts earlier appointments first. If two appointments share a time,
     // whoever checked in first goes first.
     return patientsInLine.sort((a, b) =>
+      (Boolean(b.isUrgent) - Boolean(a.isUrgent)) ||
       (a.appointmentTime || '').localeCompare(b.appointmentTime || '') ||
       a.checkedInAt - b.checkedInAt
     );
   }
 
-  // Walk-ins: first come, first served.
-  return patientsInLine.sort((a, b) => a.checkedInAt - b.checkedInAt);
+  // Walk-ins: urgent patients skip to the front, then first come, first served.
+  return patientsInLine.sort((a, b) =>
+    (Boolean(b.isUrgent) - Boolean(a.isUrgent)) ||
+    a.checkedInAt - b.checkedInAt
+  );
 }
 
 /**

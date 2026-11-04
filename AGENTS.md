@@ -160,6 +160,7 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `pushConsent` | `false` | `true` if patient consented to receive push notifications. Default `false`. |
 | `messagingConsent` | `false` | Legacy consent flag (`true` if SMS or push opted in). Kept for backward compatibility. |
 | `allergies` | `"Penicillin, Latex"` | Known / flagged allergies (defaults to `""` if none). |
+| `isUrgent` | `false` | `true` if nurse/staff flagged patient as urgent to skip queue. |
 | `checkedInAt` | `1695400000000` | `Date.now()` at check-in. |
 | `calledAt` | `1695400600000` or `null` | `Date.now()` when staff called the patient in. |
 | `completedAt` | `1695401800000` or `null` | `Date.now()` when visit marked done. |
