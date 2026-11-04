@@ -200,3 +200,57 @@
   opacity: 0.75;
   transform: scale(0.96);
 }
+
+/* ---------------------------------------------------------------------------
+ * PRIVACY SUMMARY ("Your Privacy at a Glance")
+ * The info box shown just above the SMS / push consent checkboxes, so the
+ * patient reads how their data is used before they opt in.
+ * ------------------------------------------------------------------------- */
+.privacy-summary {
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  /* A thicker teal stripe on the left marks this as an information box. */
+  border-left: 4px solid var(--accent-teal);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+/* Heading: padlock icon + "Your Privacy at a Glance" on one line. */
+.privacy-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.privacy-summary-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--accent-teal);
+  flex-shrink: 0;
+}
+
+/* The "Please read this..." line and the "Questions?" line. */
+.privacy-summary-intro,
+.privacy-summary-footnote {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* The bullet points. Left padding leaves room for the bullet dots. */
+.privacy-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* The bold lead-in words ("What we collect:") stand out a little more. */
+.privacy-summary-list strong {
+  color: var(--text-primary);
+}
