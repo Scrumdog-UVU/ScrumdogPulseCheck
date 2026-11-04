@@ -45,11 +45,19 @@
   margin-bottom: 1.5rem;
 }
 
+.admin-search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .search-label {
   display: block;
   font-weight: 700;
   font-size: 0.95rem;
-  margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
 
@@ -61,6 +69,267 @@
 
 .search-input-wrapper input[type="search"] {
   flex: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * DUPLICATE DETECTION ALERT BANNER & MERGE MODAL
+ * ------------------------------------------------------------------------- */
+.duplicate-alert-card {
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+[data-theme="light"] .duplicate-alert-card {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.duplicate-alert-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.duplicate-alert-text {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+}
+
+.duplicate-alert-icon {
+  font-size: 1.5rem;
+}
+
+.duplicate-alert-sub {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+/* Modal Backdrop & Dialog */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.modal-dialog {
+  max-width: 820px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--accent-color);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+}
+
+.modal-close-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--input-bg);
+}
+
+.merge-selectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.merge-selector-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.merge-select-label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.merge-label-sub {
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.merge-suggestions {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--input-bg);
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius);
+}
+
+.merge-suggestions-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.merge-suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.75rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.suggestion-chip:hover {
+  border-color: var(--accent-color);
+  background-color: rgba(56, 130, 246, 0.1);
+}
+
+/* Side by side comparison */
+.merge-comparison-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.merge-preview-column {
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.merge-preview-header {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.merge-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.merge-field-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.merge-field-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.merge-field-val {
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Outcome Summary Box */
+.merge-outcome-card {
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+
+[data-theme="light"] .merge-outcome-card {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.merge-outcome-title {
+  font-weight: 700;
+  color: var(--accent-teal);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.merge-outcome-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 /* ---------------------------------------------------------------------------

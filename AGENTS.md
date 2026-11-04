@@ -99,8 +99,8 @@ Readers are non-programmers, so explain *what* and *why* in plain English.
   strings like `'waiting'`.
 - **Only `js/storage.js` may call `localStorage`.** Everywhere else, use its
   functions (`getAllPatients`, `addPatient`, `updatePatient`, `removePatient`,
-  …). If you need a new kind of saved data, add a key to `STORAGE_KEYS` and
-  getter/setter functions in `storage.js`.
+  `findPotentialDuplicates`, `mergePatients`, …). If you need a new kind of saved data,
+  add a key to `STORAGE_KEYS` and getter/setter functions in `storage.js`.
 - **Always wrap patient-entered text in `escapeHTML(...)`** when building
   HTML strings. For plain text, prefer `element.textContent = ...`.
 - Show and hide things with the `hidden` attribute (`element.hidden = true`),
