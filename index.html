@@ -433,12 +433,88 @@
         </div>
       </div>
 
-      <!-- Patient Search Bar -->
+      <!-- Patient Search Bar & Merge Trigger -->
       <div class="card admin-search-card">
-        <label for="admin-search-input" class="search-label">Search Patients</label>
+        <div class="admin-search-header">
+          <label for="admin-search-input" class="search-label">Search Patients</label>
+          <button type="button" id="admin-open-merge-btn" class="btn btn-secondary btn-small">
+            🔀 Merge Duplicate Records
+          </button>
+        </div>
         <div class="search-input-wrapper">
           <input type="search" id="admin-search-input" placeholder="Search by patient name or phone number..." aria-label="Search patients by name or phone number">
           <button type="button" id="admin-search-clear-btn" class="btn btn-secondary btn-small" hidden>Clear</button>
+        </div>
+      </div>
+
+      <!-- Duplicate Detection Alert Banner (shown when duplicates are detected) -->
+      <div id="admin-duplicate-alert" class="card duplicate-alert-card" hidden>
+        <div class="duplicate-alert-content">
+          <div class="duplicate-alert-text">
+            <span class="duplicate-alert-icon">⚠️</span>
+            <div>
+              <strong>Potential duplicate patient records detected!</strong>
+              <p id="admin-duplicate-alert-msg" class="duplicate-alert-sub"></p>
+            </div>
+          </div>
+          <button type="button" id="admin-review-duplicates-btn" class="btn btn-primary btn-small">Review &amp; Merge</button>
+        </div>
+      </div>
+
+      <!-- Merge Duplicate Patients Modal / Card Interface -->
+      <div id="admin-merge-modal" class="modal-backdrop" hidden>
+        <div class="modal-dialog card" role="dialog" aria-labelledby="merge-modal-title" aria-modal="true">
+          <div class="modal-header">
+            <div>
+              <h2 id="merge-modal-title" class="queue-title">Merge Duplicate Patient Records</h2>
+              <p class="queue-hint">Consolidate duplicate records for the same patient. Select which record to keep as primary.</p>
+            </div>
+            <button type="button" id="admin-close-merge-btn" class="modal-close-btn" aria-label="Close merge dialog">&times;</button>
+          </div>
+
+          <div class="merge-selectors-grid">
+            <div class="merge-selector-box">
+              <label for="merge-primary-select" class="merge-select-label">
+                <strong>Primary Record (Keep)</strong>
+                <span class="merge-label-sub">This record will be retained and updated.</span>
+              </label>
+              <select id="merge-primary-select" class="form-input"></select>
+            </div>
+
+            <div class="merge-selector-box">
+              <label for="merge-secondary-select" class="merge-select-label">
+                <strong>Duplicate Record (Merge &amp; Remove)</strong>
+                <span class="merge-label-sub">Data will be consolidated into primary, then this record is deleted.</span>
+              </label>
+              <select id="merge-secondary-select" class="form-input"></select>
+            </div>
+          </div>
+
+          <!-- Quick Detected Pairs Suggestions -->
+          <div id="merge-suggestions-container" class="merge-suggestions" hidden>
+            <span class="merge-suggestions-label">Detected Duplicate Candidates:</span>
+            <div id="merge-suggestions-list" class="merge-suggestions-list"></div>
+          </div>
+
+          <!-- Side-by-side comparison preview -->
+          <div id="merge-comparison-preview" class="merge-comparison-wrapper">
+            <div class="merge-preview-column" id="merge-primary-preview">
+              <!-- Primary preview rendered by JS -->
+            </div>
+            <div class="merge-preview-column" id="merge-secondary-preview">
+              <!-- Secondary preview rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Resulting record preview -->
+          <div id="merge-outcome-summary" class="merge-outcome-card">
+            <!-- Outcome summary rendered by JS -->
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="admin-cancel-merge-btn" class="btn btn-secondary">Cancel</button>
+            <button type="button" id="admin-confirm-merge-btn" class="btn btn-primary" disabled>Confirm &amp; Merge Records</button>
+          </div>
         </div>
       </div>
 

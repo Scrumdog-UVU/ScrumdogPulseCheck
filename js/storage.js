@@ -271,6 +271,192 @@ function removeFinishedPatients() {
 }
 
 /**
+ * Scans all patient records to find potential duplicate patients.
+ * Duplicates are detected when two records share:
+ *   - The same normalized phone number (digits only), OR
+ *   - The same normalized full name (case-insensitive, trimmed) AND date of birth, OR
+ *   - The same normalized full name.
+ *
+ * @returns {Array<Object>} List of duplicate pair objects:
+ *   [{ patientA: Object, patientB: Object, matchReasons: Array<string> }]
+ */
+function findPotentialDuplicates() {
+  const patients = getAllPatients();
+  const duplicatePairs = [];
+  const seenPairKeys = new Set();
+
+  for (let i = 0; i < patients.length; i++) {
+    for (let j = i + 1; j < patients.length; j++) {
+      const p1 = patients[i];
+      const p2 = patients[j];
+
+      const matchReasons = [];
+
+      // Cleaned phone numbers (digits only)
+      const phone1 = (p1.phone || '').replace(/\D/g, '');
+      const phone2 = (p2.phone || '').replace(/\D/g, '');
+      const phoneMatch = phone1.length >= 7 && phone1 === phone2;
+
+      // Cleaned names
+      const name1 = (p1.name || '').trim().toLowerCase();
+      const name2 = (p2.name || '').trim().toLowerCase();
+      const nameMatch = name1.length > 0 && name1 === name2;
+
+      // Cleaned date of birth
+      const dob1 = (p1.dob || '').trim();
+      const dob2 = (p2.dob || '').trim();
+      const dobMatch = dob1.length > 0 && dob1 === dob2;
+
+      if (phoneMatch) {
+        matchReasons.push('Matching Phone Number');
+      }
+      if (nameMatch && dobMatch) {
+        matchReasons.push('Matching Name & Date of Birth');
+      } else if (nameMatch) {
+        matchReasons.push('Matching Name');
+      } else if (dobMatch && phoneMatch) {
+        matchReasons.push('Matching DOB');
+      }
+
+      if (matchReasons.length > 0) {
+        const pairKey = [p1.id, p2.id].sort().join('::');
+        if (!seenPairKeys.has(pairKey)) {
+          seenPairKeys.add(pairKey);
+          duplicatePairs.push({
+            patientA: p1,
+            patientB: p2,
+            matchReasons: matchReasons
+          });
+        }
+      }
+    }
+  }
+
+  return duplicatePairs;
+}
+
+/**
+ * Merges two patient records into one.
+ * The primary record is kept and updated; the secondary record is deleted.
+ * Any SMS messages, survey responses, or current patient selections referencing
+ * the secondary record are redirected to the primary record.
+ *
+ * @param {string} primaryPatientId - ID of the record to keep.
+ * @param {string} secondaryPatientId - ID of the duplicate record to merge in and delete.
+ * @returns {Object|null} The updated primary patient record, or null on failure.
+ */
+function mergePatients(primaryPatientId, secondaryPatientId) {
+  if (!primaryPatientId || !secondaryPatientId || primaryPatientId === secondaryPatientId) {
+    console.error('Cannot merge: invalid patient IDs provided.');
+    return null;
+  }
+
+  const primary = getPatientById(primaryPatientId);
+  const secondary = getPatientById(secondaryPatientId);
+
+  if (!primary || !secondary) {
+    console.error('Cannot merge: one or both patient records do not exist.');
+    return null;
+  }
+
+  // 1. Combine allergies (avoid duplicates)
+  const allergiesSet = new Set();
+  const splitAllergies = (str) => (str || '').split(',').map((item) => item.trim()).filter(Boolean);
+  splitAllergies(primary.allergies).forEach((a) => allergiesSet.add(a));
+  splitAllergies(secondary.allergies).forEach((a) => {
+    // Skip placeholder strings like "None" if other real allergies exist
+    if (!['none', 'no', 'n/a', 'nkda', 'none known'].includes(a.toLowerCase())) {
+      allergiesSet.add(a);
+    }
+  });
+  // If allergies set contains non-none allergies, remove any "None" tokens
+  const realAllergies = Array.from(allergiesSet).filter(
+    (a) => !['none', 'no', 'n/a', 'nkda', 'none known'].includes(a.toLowerCase())
+  );
+  const mergedAllergies = realAllergies.length > 0
+    ? realAllergies.join(', ')
+    : (primary.allergies || secondary.allergies || '');
+
+  // 2. Consolidate communication consents (opt-in if either agreed)
+  const mergedSmsConsent = Boolean(primary.smsConsent || secondary.smsConsent || primary.messagingConsent || secondary.messagingConsent);
+  const mergedPushConsent = Boolean(primary.pushConsent || secondary.pushConsent || primary.messagingConsent || secondary.messagingConsent);
+
+  // 3. Consolidate urgent flag
+  const mergedIsUrgent = Boolean(primary.isUrgent || secondary.isUrgent);
+
+  // 4. Consolidate timestamps (preserve earliest check-in time)
+  const mergedCheckedInAt = Math.min(
+    primary.checkedInAt || Date.now(),
+    secondary.checkedInAt || Date.now()
+  );
+
+  // 5. Consolidate appointment details if primary doesn't have an appointment but secondary does
+  let mergedVisitType = primary.visitType;
+  let mergedAppointmentTime = primary.appointmentTime;
+  if (mergedVisitType !== VISIT_TYPE.APPOINTMENT && secondary.visitType === VISIT_TYPE.APPOINTMENT) {
+    mergedVisitType = VISIT_TYPE.APPOINTMENT;
+    mergedAppointmentTime = secondary.appointmentTime;
+  }
+
+  // 6. Consolidate date of birth and phone if primary is missing them
+  const mergedDob = primary.dob || secondary.dob || null;
+  const mergedPhone = primary.phone || secondary.phone;
+
+  // 7. Consolidate reason for visit (if secondary had different notes, record them)
+  let mergedReason = primary.reason;
+  if (secondary.reason && secondary.reason !== primary.reason) {
+    mergedReason = `${primary.reason} (Also: ${secondary.reason})`;
+  }
+
+  // 8. Update the primary patient record
+  const updatedPrimary = {
+    ...primary,
+    phone: mergedPhone,
+    dob: mergedDob,
+    reason: mergedReason,
+    visitType: mergedVisitType,
+    appointmentTime: mergedAppointmentTime,
+    smsConsent: mergedSmsConsent,
+    pushConsent: mergedPushConsent,
+    messagingConsent: mergedSmsConsent || mergedPushConsent,
+    allergies: mergedAllergies,
+    isUrgent: mergedIsUrgent,
+    checkedInAt: mergedCheckedInAt
+  };
+
+  // 9. Update patients array in storage: update primary, remove secondary
+  const allPatients = getAllPatients()
+    .filter((p) => p.id !== secondaryPatientId)
+    .map((p) => (p.id === primaryPatientId ? updatedPrimary : p));
+  saveAllPatients(allPatients);
+
+  // 10. Re-assign SMS messages from secondary patient to primary patient
+  const allSms = getAllSmsMessages().map((msg) => {
+    if (msg.patientId === secondaryPatientId) {
+      return { ...msg, patientId: primaryPatientId };
+    }
+    return msg;
+  });
+  localStorage.setItem(STORAGE_KEYS.SMS_MESSAGES, JSON.stringify(allSms));
+
+  // 11. Re-assign surveys from secondary patient to primary patient
+  const allSurveys = getAllSurveys().map((survey) => {
+    if (survey.patientId === secondaryPatientId) {
+      return { ...survey, patientId: primaryPatientId, patientName: updatedPrimary.name };
+    }
+    return survey;
+  });
+  localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(allSurveys));
+
+  // 12. If the current view was "viewing as" the secondary patient, switch to primary
+  if (getCurrentPatientId() === secondaryPatientId) {
+    setCurrentPatientId(primaryPatientId);
+  }
+
+  return updatedPrimary;
+}
+
+/**
  * Makes a ticket number like "T-482" that isn't already in use.
  * (Kept inside this file because only addPatient needs it.)
  *

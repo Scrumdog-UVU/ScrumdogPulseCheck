@@ -23,7 +23,8 @@ const ADMIN_ACTIONS = {
   MARK_DONE: 'mark-done',     // CALLED  -> DONE
   TOGGLE_URGENT: 'toggle-urgent', // toggle isUrgent flag (true/false)
   NO_SHOW: 'no-show',         // WAITING/CALLED -> NO_SHOW
-  REMOVE: 'remove'            // delete the patient entirely
+  REMOVE: 'remove',           // delete the patient entirely
+  MERGE: 'merge'              // open merge dialog for this patient
 };
 
 /**
@@ -119,6 +120,9 @@ function initAdminView() {
       renderHistoricalWaitTimeReports(getAllPatients());
     });
   }
+
+  // Event listeners for Merge Duplicate Patients Modal
+  initMergeModal();
 }
 
 /**
@@ -161,6 +165,10 @@ function handleAdminAction(action, patientId) {
   } else if (action === ADMIN_ACTIONS.REMOVE) {
     if (!confirm('Remove this patient from the queue?')) return;
     removePatient(patientId);
+
+  } else if (action === ADMIN_ACTIONS.MERGE) {
+    openMergeModal(patientId);
+    return; // openMergeModal manages its own view update
   }
 
   renderAdminView();
@@ -200,6 +208,9 @@ function renderAdminView() {
   const resetBtn = document.getElementById('admin-reset-btn');
   if (clearFinishedBtn) clearFinishedBtn.hidden = !canReset;
   if (resetBtn) resetBtn.hidden = !canReset;
+
+  // --- Duplicate Patient Detection Banner ------------------------------
+  renderDuplicateAlert();
 
   // --- Today's Key Metrics Dashboard -----------------------------------
   renderKeyMetrics(allPatients);
@@ -356,18 +367,24 @@ function buildPatientRow(patient, position) {
       ? actionButton(ADMIN_ACTIONS.TOGGLE_URGENT, urgentButtonLabel, urgentButtonStyle, patient.id)
       : '';
 
+    const mergeBtn = actionButton(ADMIN_ACTIONS.MERGE, 'Merge', 'btn-secondary', patient.id);
+
     if (patient.status === PATIENT_STATUS.WAITING) {
       buttons = actionButton(ADMIN_ACTIONS.CALL_IN, 'Call In', 'btn-primary', patient.id) +
                 urgentBtn +
+                mergeBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
                 actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
     } else if (patient.status === PATIENT_STATUS.CALLED) {
       buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
                 urgentBtn +
+                mergeBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
                 actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+    } else if (patient.status === PATIENT_STATUS.DONE) {
+      buttons = mergeBtn;
     } else if (patient.status === PATIENT_STATUS.NO_SHOW) {
-      buttons = actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+      buttons = mergeBtn + actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
     }
   } else {
     buttons = '<span class="row-detail" style="font-style: italic;">View Only</span>';
@@ -848,4 +865,395 @@ function renderHistoricalWaitTimeReports(allPatients) {
   `;
 
   chartContainer.innerHTML = chartHtml;
+}
+
+/* ---------------------------------------------------------------------------
+ * MERGE DUPLICATE PATIENTS MODAL & CONTROLS
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Initializes listeners for the Merge Duplicate Patients dialog.
+ */
+function initMergeModal() {
+  const openBtn = document.getElementById('admin-open-merge-btn');
+  const reviewBtn = document.getElementById('admin-review-duplicates-btn');
+  const closeBtn = document.getElementById('admin-close-merge-btn');
+  const cancelBtn = document.getElementById('admin-cancel-merge-btn');
+  const confirmBtn = document.getElementById('admin-confirm-merge-btn');
+  const modal = document.getElementById('admin-merge-modal');
+  const primarySelect = document.getElementById('merge-primary-select');
+  const secondarySelect = document.getElementById('merge-secondary-select');
+
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      openMergeModal();
+    });
+  }
+
+  if (reviewBtn) {
+    reviewBtn.addEventListener('click', () => {
+      const duplicates = findPotentialDuplicates();
+      if (duplicates.length > 0) {
+        openMergeModal(duplicates[0].patientA.id, duplicates[0].patientB.id);
+      } else {
+        openMergeModal();
+      }
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeMergeModal);
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeMergeModal);
+  }
+
+  // Close modal when clicking outside the dialog content
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeMergeModal();
+      }
+    });
+  }
+
+  // Update comparison view on selection change
+  if (primarySelect) {
+    primarySelect.addEventListener('change', updateMergeComparison);
+  }
+
+  if (secondarySelect) {
+    secondarySelect.addEventListener('change', updateMergeComparison);
+  }
+
+  // Handle merge confirmation
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', handleExecuteMerge);
+  }
+
+  // Handle clicking on detected candidate chips
+  const suggestionsList = document.getElementById('merge-suggestions-list');
+  if (suggestionsList) {
+    suggestionsList.addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-candidate-a]');
+      if (!chip) return;
+
+      const idA = chip.dataset.candidateA;
+      const idB = chip.dataset.candidateB;
+      if (primarySelect && secondarySelect) {
+        primarySelect.value = idA;
+        secondarySelect.value = idB;
+        updateMergeComparison();
+      }
+    });
+  }
+}
+
+/**
+ * Shows or hides the duplicate alert banner based on current detected duplicates.
+ */
+function renderDuplicateAlert() {
+  const alertCard = document.getElementById('admin-duplicate-alert');
+  const alertMsg = document.getElementById('admin-duplicate-alert-msg');
+  if (!alertCard || !alertMsg) return;
+
+  const duplicates = findPotentialDuplicates();
+  if (duplicates.length === 0) {
+    alertCard.hidden = true;
+    return;
+  }
+
+  alertCard.hidden = false;
+  const count = duplicates.length;
+  const pairWord = count === 1 ? 'pair' : 'pairs';
+  const firstMatch = duplicates[0];
+  const summary = `Found ${count} duplicate ${pairWord} (e.g., "${escapeHTML(firstMatch.patientA.name)}" - ${firstMatch.matchReasons.join(', ')}).`;
+  alertMsg.innerHTML = summary;
+}
+
+/**
+ * Opens the merge dialog and populates the patient selection dropdowns.
+ *
+ * @param {string} [initialPrimaryId] - Optional patient ID to preselect as primary.
+ * @param {string} [initialSecondaryId] - Optional patient ID to preselect as secondary.
+ */
+function openMergeModal(initialPrimaryId, initialSecondaryId) {
+  const modal = document.getElementById('admin-merge-modal');
+  const primarySelect = document.getElementById('merge-primary-select');
+  const secondarySelect = document.getElementById('merge-secondary-select');
+  if (!modal || !primarySelect || !secondarySelect) return;
+
+  const allPatients = getAllPatients();
+
+  // Populate options
+  const buildOptions = (selectedId) => {
+    let html = '<option value="">-- Choose a patient --</option>';
+    allPatients.forEach((patient) => {
+      const isSelected = patient.id === selectedId ? 'selected' : '';
+      const phoneDisplay = patient.phone ? ` · ${patient.phone}` : '';
+      const dobDisplay = patient.dob ? ` · DOB: ${patient.dob}` : '';
+      html += `<option value="${escapeHTML(patient.id)}" ${isSelected}>
+        ${escapeHTML(patient.ticketNumber)} - ${escapeHTML(patient.name)} (${patient.status}${phoneDisplay}${dobDisplay})
+      </option>`;
+    });
+    return html;
+  };
+
+  // If no initial IDs specified, check if there are detected duplicates
+  const detectedDuplicates = findPotentialDuplicates();
+  let defaultPrimary = initialPrimaryId;
+  let defaultSecondary = initialSecondaryId;
+
+  if (!defaultPrimary && detectedDuplicates.length > 0) {
+    defaultPrimary = detectedDuplicates[0].patientA.id;
+    defaultSecondary = detectedDuplicates[0].patientB.id;
+  } else if (defaultPrimary && !defaultSecondary) {
+    // If only primary given (e.g. from row button), find if there is a detected duplicate pair with this patient
+    const match = detectedDuplicates.find(
+      (d) => d.patientA.id === defaultPrimary || d.patientB.id === defaultPrimary
+    );
+    if (match) {
+      defaultSecondary = match.patientA.id === defaultPrimary ? match.patientB.id : match.patientA.id;
+    }
+  }
+
+  primarySelect.innerHTML = buildOptions(defaultPrimary);
+  secondarySelect.innerHTML = buildOptions(defaultSecondary);
+
+  // Render detected candidates chips
+  renderMergeSuggestions(detectedDuplicates);
+
+  // Update comparison view
+  updateMergeComparison();
+
+  modal.hidden = false;
+  primarySelect.focus();
+}
+
+/**
+ * Closes the merge dialog.
+ */
+function closeMergeModal() {
+  const modal = document.getElementById('admin-merge-modal');
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+/**
+ * Displays quick-select chips for detected duplicate pairs.
+ *
+ * @param {Array<Object>} detectedDuplicates
+ */
+function renderMergeSuggestions(detectedDuplicates) {
+  const container = document.getElementById('merge-suggestions-container');
+  const list = document.getElementById('merge-suggestions-list');
+  if (!container || !list) return;
+
+  if (detectedDuplicates.length === 0) {
+    container.hidden = true;
+    list.innerHTML = '';
+    return;
+  }
+
+  container.hidden = false;
+  list.innerHTML = detectedDuplicates.map((dup) => `
+    <button type="button" class="suggestion-chip"
+            data-candidate-a="${escapeHTML(dup.patientA.id)}"
+            data-candidate-b="${escapeHTML(dup.patientB.id)}"
+            title="Click to compare this duplicate pair">
+      <span><strong>${escapeHTML(dup.patientA.name)}</strong> (${escapeHTML(dup.patientA.ticketNumber)} &amp; ${escapeHTML(dup.patientB.ticketNumber)})</span>
+      <span class="analytics-badge" style="padding: 0.1rem 0.4rem; font-size: 0.72rem;">${escapeHTML(dup.matchReasons[0])}</span>
+    </button>
+  `).join('');
+}
+
+/**
+ * Updates the side-by-side comparison previews and consolidated outcome preview.
+ */
+function updateMergeComparison() {
+  const primarySelect = document.getElementById('merge-primary-select');
+  const secondarySelect = document.getElementById('merge-secondary-select');
+  const primaryPreview = document.getElementById('merge-primary-preview');
+  const secondaryPreview = document.getElementById('merge-secondary-preview');
+  const outcomeCard = document.getElementById('merge-outcome-summary');
+  const confirmBtn = document.getElementById('admin-confirm-merge-btn');
+
+  const primaryId = primarySelect ? primarySelect.value : '';
+  const secondaryId = secondarySelect ? secondarySelect.value : '';
+
+  const primary = primaryId ? getPatientById(primaryId) : null;
+  const secondary = secondaryId ? getPatientById(secondaryId) : null;
+
+  // Build card preview for one patient
+  const buildPreview = (patient, title, badgeClass) => {
+    if (!patient) {
+      return `
+        <div class="merge-preview-header">
+          <span>${title}</span>
+        </div>
+        <p class="empty-msg">No patient selected</p>
+      `;
+    }
+
+    const consentText = [
+      patient.smsConsent ? 'SMS: Yes' : 'SMS: No',
+      patient.pushConsent ? 'Push: Yes' : 'Push: No'
+    ].join(' · ');
+
+    return `
+      <div class="merge-preview-header">
+        <span>${title}</span>
+        <span class="status-badge ${badgeClass}">${escapeHTML(patient.ticketNumber)} (${escapeHTML(patient.status)})</span>
+      </div>
+      <div class="merge-field-list">
+        <div class="merge-field-item">
+          <span class="merge-field-name">Name</span>
+          <span class="merge-field-val">${escapeHTML(patient.name)}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">DOB</span>
+          <span class="merge-field-val">${escapeHTML(patient.dob || 'None recorded')}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Phone</span>
+          <span class="merge-field-val">${escapeHTML(patient.phone || 'None recorded')}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Visit Type</span>
+          <span class="merge-field-val">${escapeHTML(patient.visitType)}${patient.appointmentTime ? ` (${escapeHTML(patient.appointmentTime)})` : ''}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Reason</span>
+          <span class="merge-field-val">${escapeHTML(patient.reason)}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Allergies</span>
+          <span class="merge-field-val">${escapeHTML(patient.allergies || 'None')}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Consents &amp; Urgent</span>
+          <span class="merge-field-val">${escapeHTML(consentText)}${patient.isUrgent ? ' · 🚨 Urgent Priority' : ''}</span>
+        </div>
+        <div class="merge-field-item">
+          <span class="merge-field-name">Checked In</span>
+          <span class="merge-field-val">${escapeHTML(formatClockTime(patient.checkedInAt))}</span>
+        </div>
+      </div>
+    `;
+  };
+
+  if (primaryPreview) {
+    primaryPreview.innerHTML = buildPreview(primary, 'Primary Record (Retained)', 'status-called');
+  }
+
+  if (secondaryPreview) {
+    secondaryPreview.innerHTML = buildPreview(secondary, 'Duplicate Record (To Merge & Remove)', 'status-no-show');
+  }
+
+  // Outcome preview and button state
+  if (primary && secondary && primary.id !== secondary.id) {
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    // Allergy union preview
+    const allergiesSet = new Set();
+    const splitAllergies = (str) => (str || '').split(',').map((item) => item.trim()).filter(Boolean);
+    splitAllergies(primary.allergies).forEach((a) => allergiesSet.add(a));
+    splitAllergies(secondary.allergies).forEach((a) => {
+      if (!['none', 'no', 'n/a', 'nkda', 'none known'].includes(a.toLowerCase())) {
+        allergiesSet.add(a);
+      }
+    });
+    const realAllergies = Array.from(allergiesSet).filter(
+      (a) => !['none', 'no', 'n/a', 'nkda', 'none known'].includes(a.toLowerCase())
+    );
+    const combinedAllergies = realAllergies.length > 0 ? realAllergies.join(', ') : (primary.allergies || 'None');
+
+    const smsCombined = Boolean(primary.smsConsent || secondary.smsConsent || primary.messagingConsent || secondary.messagingConsent);
+    const pushCombined = Boolean(primary.pushConsent || secondary.pushConsent || primary.messagingConsent || secondary.messagingConsent);
+    const urgentCombined = Boolean(primary.isUrgent || secondary.isUrgent);
+
+    let reasonCombined = primary.reason;
+    if (secondary.reason && secondary.reason !== primary.reason) {
+      reasonCombined = `${primary.reason} (Also: ${secondary.reason})`;
+    }
+
+    if (outcomeCard) {
+      outcomeCard.hidden = false;
+      outcomeCard.innerHTML = `
+        <div class="merge-outcome-title">
+          <span>✓ Merge Summary Preview</span>
+        </div>
+        <ul class="merge-outcome-list">
+          <li><strong>Retained Ticket:</strong> ${escapeHTML(primary.ticketNumber)} for ${escapeHTML(primary.name)}</li>
+          <li><strong>Consolidated Allergies:</strong> ${escapeHTML(combinedAllergies)}</li>
+          <li><strong>Communication Preferences:</strong> SMS: ${smsCombined ? 'Opted In' : 'No'}, Push: ${pushCombined ? 'Opted In' : 'No'}</li>
+          ${urgentCombined ? '<li><strong>Priority:</strong> 🚨 Marked Urgent</li>' : ''}
+          <li><strong>Consolidated Reason:</strong> ${escapeHTML(reasonCombined)}</li>
+          <li><strong>Data Cleanup:</strong> Record ${escapeHTML(secondary.ticketNumber)} will be permanently removed, and its history linked to ${escapeHTML(primary.ticketNumber)}.</li>
+        </ul>
+      `;
+    }
+  } else {
+    if (confirmBtn) confirmBtn.disabled = true;
+    if (outcomeCard) {
+      outcomeCard.hidden = false;
+      if (primary && secondary && primary.id === secondary.id) {
+        outcomeCard.innerHTML = `
+          <div class="merge-outcome-title" style="color: var(--danger-color);">
+            <span>⚠️ Please choose two different patient records</span>
+          </div>
+          <p style="margin: 0; color: var(--text-secondary);">A record cannot be merged with itself.</p>
+        `;
+      } else {
+        outcomeCard.innerHTML = `
+          <div class="merge-outcome-title" style="color: var(--text-secondary);">
+            <span>ℹ️ Select both a Primary and Duplicate record</span>
+          </div>
+          <p style="margin: 0; color: var(--text-secondary);">Choose the record you wish to keep on the left, and the duplicate record to consolidate on the right.</p>
+        `;
+      }
+    }
+  }
+}
+
+/**
+ * Executes the merge operation after staff confirmation.
+ */
+function handleExecuteMerge() {
+  const primarySelect = document.getElementById('merge-primary-select');
+  const secondarySelect = document.getElementById('merge-secondary-select');
+  if (!primarySelect || !secondarySelect) return;
+
+  const primaryId = primarySelect.value;
+  const secondaryId = secondarySelect.value;
+
+  if (!primaryId || !secondaryId || primaryId === secondaryId) {
+    alert('Please select two different patient records to merge.');
+    return;
+  }
+
+  const primary = getPatientById(primaryId);
+  const secondary = getPatientById(secondaryId);
+
+  if (!primary || !secondary) {
+    alert('Could not find one or both patient records.');
+    return;
+  }
+
+  const confirmPrompt = `Merge duplicate record #${secondary.ticketNumber} (${secondary.name}) into #${primary.ticketNumber} (${primary.name})?\n\nRecord #${secondary.ticketNumber} will be deleted and all relevant medical details consolidated.`;
+  if (!confirm(confirmPrompt)) {
+    return;
+  }
+
+  const merged = mergePatients(primaryId, secondaryId);
+  if (!merged) {
+    alert('Failed to merge patient records.');
+    return;
+  }
+
+  closeMergeModal();
+  renderAdminView();
+  alert(`Successfully merged duplicate patient records into #${merged.ticketNumber} (${merged.name}).`);
 }
