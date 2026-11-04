@@ -49,6 +49,7 @@ js/
   helpers.js                General tools (escapeHTML, time formatting). No patient logic.
   storage.js                The ONLY file that touches localStorage. Data model lives here.
   queue.js                  Queue rules: ordering and wait-time math. No page changes.
+  sms-alerts.js             Pretend SMS texts: decides when to "text" a patient. No page changes.
   views/
     new-patient.js          New Patient view logic.
     patient-status.js       My Status view logic.
@@ -65,7 +66,7 @@ mostly be touching `js/views/admin.js`, `css/admin.css`, and the
 ### Script load order matters
 
 The `<script>` tags at the bottom of `index.html` load in this order:
-`helpers.js` → `storage.js` → `queue.js` → `views/*.js` → `app.js`.
+`helpers.js` → `storage.js` → `queue.js` → `sms-alerts.js` → `views/*.js` → `app.js`.
 Files can only use functions from files loaded before them (or at click-time,
 after everything has loaded). Keep `app.js` last. Do **not** switch to
 ES modules (`import`/`export`, `type="module"`); they don't work from `file://`.

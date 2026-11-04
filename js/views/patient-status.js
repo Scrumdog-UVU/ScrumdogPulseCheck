@@ -19,6 +19,11 @@
  * PUSH NOTIFICATION: when staff click "Call In", this view also pops up a
  * pretend phone notification saying "It's your turn!" (see the
  * SIMULATED PUSH NOTIFICATION section at the bottom of this file).
+ *
+ * SMS TEXTS: patients who opted in to SMS get a "Text Messages" card that
+ * shows the texts the clinic "sent" them, such as "Your turn is coming up!"
+ * (see the SIMULATED SMS TEXT MESSAGES section at the bottom of this file,
+ * and js/sms-alerts.js for when texts are sent).
  */
 
 /**
@@ -59,6 +64,10 @@ function initPatientStatusView() {
  * is shown or the data changes.
  */
 function renderPatientStatusView() {
+  // "Send" any texts that are now due (see js/sms-alerts.js), so the
+  // Text Messages card below is up to date.
+  sendDueSmsAlerts();
+
   const allPatients = getAllPatients();
 
   // --- Case 1: nobody has checked in yet. Show the "empty" message. -------
@@ -79,6 +88,7 @@ function renderPatientStatusView() {
   fillPatientPicker(allPatients, patient.id);
   fillTicket(patient);
   fillTurnAlert(patient);
+  fillSmsInbox(patient);
 }
 
 /**
@@ -281,4 +291,62 @@ function playTurnAlertChime() {
     tone.start(startTime);
     tone.stop(startTime + 0.5);
   });
+}
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED SMS TEXT MESSAGES ("Your turn is coming up!")
+ * A real clinic would text the patient's phone. This demo has no phones, so
+ * the texts appear in a "Text Messages" card under the ticket, like the
+ * patient's messaging app. The texts are written and "sent" by
+ * js/sms-alerts.js.
+ * HTML: <div id="status-sms-card"> in index.html
+ * Styles: the "SIMULATED SMS TEXT MESSAGES" section of css/patient-status.css
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Fills in the Text Messages card for one patient.
+ *
+ * The card only appears if the patient ticked the SMS consent box when
+ * checking in. Until their first text arrives, it says when to expect one.
+ *
+ * @param {Object} patient - The patient whose "phone" this is.
+ */
+function fillSmsInbox(patient) {
+  const smsCard = document.getElementById('status-sms-card');
+
+  // No consent = we never text them, so there's nothing to show.
+  smsCard.hidden = !patientHasSmsConsent(patient);
+  if (smsCard.hidden) return;
+
+  const messages = getSmsMessagesForPatient(patient.id);
+  const hasMessages = messages.length > 0;
+
+  document.getElementById('status-sms-phone').textContent = `To: ${patient.phone}`;
+
+  // Before any texts arrive, tell the patient when to expect one.
+  const visitIsOver = patient.status === PATIENT_STATUS.DONE || patient.status === PATIENT_STATUS.NO_SHOW;
+  const emptyMessage = document.getElementById('status-sms-empty');
+  emptyMessage.hidden = hasMessages;
+  emptyMessage.textContent = visitIsOver
+    ? 'No texts were sent during this visit.'
+    : `No texts yet. We'll text you when there are ${SMS_ALERT_PEOPLE_AHEAD} or fewer people ahead of you in line.`;
+
+  const list = document.getElementById('status-sms-list');
+  list.hidden = !hasMessages;
+
+  // Only redraw the bubbles when something changed (a different patient or
+  // a new text). This view redraws every 30 seconds; redrawing the bubbles
+  // each time would replay the "new text" animation and make screen readers
+  // read every text out loud again.
+  const listKey = `${patient.id}:${messages.length}`;
+  if (list.dataset.shownKey === listKey) return;
+  list.dataset.shownKey = listKey;
+
+  // One speech bubble per text, oldest at the top like a phone shows them.
+  list.innerHTML = messages.map((message) => `
+    <li class="sms-bubble">
+      <p class="sms-bubble-text">${escapeHTML(message.text)}</p>
+      <span class="sms-bubble-time">${escapeHTML(formatClockTime(message.sentAt))}</span>
+    </li>
+  `).join('');
 }

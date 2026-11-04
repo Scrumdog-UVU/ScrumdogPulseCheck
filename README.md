@@ -16,6 +16,9 @@ Use the buttons in the top bar to switch roles:
    "Viewing as patient" drop-down to switch between checked-in patients.
    If the patient ticked the notifications box when checking in, a pretend
    push notification ("It's your turn!") pops up here when staff call them in.
+   If they ticked the SMS box, a **Text Messages** card shows the pretend
+   texts the clinic sent them: "Your turn is coming up!" once 2 or fewer
+   people are ahead of them, and "It's your turn!" when they're called in.
 3. **Staff View**: see the Scheduled Appointments and Walk-ins queues.
    **Call In** a patient, then **Mark Done** when their visit is over.
 4. **Dashboard**: a live, read-only overview for front-desk staff. It shows

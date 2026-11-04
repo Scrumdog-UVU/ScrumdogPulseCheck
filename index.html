@@ -376,6 +376,30 @@
 
           <button type="button" id="status-cancel-btn" class="btn btn-danger">Cancel My Check-In</button>
         </div>
+
+        <!-- Pretend text messages (SMS): "Your turn is coming up!"
+             This demo can't send real texts, so the texts the clinic "sent"
+             to this patient's phone are shown here instead. Only shown if
+             the patient opted in to SMS updates at check-in.
+             Texts are "sent" by js/sms-alerts.js and shown by
+             fillSmsInbox() in js/views/patient-status.js.
+             Styles live in: css/patient-status.css (.sms-card) -->
+        <div id="status-sms-card" class="card sms-card" hidden>
+          <div class="sms-card-header">
+            <h2 class="sms-card-title">
+              <!-- A speech-bubble icon. aria-hidden: screen readers skip it. -->
+              <svg class="sms-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Text Messages</span>
+            </h2>
+            <span id="status-sms-phone" class="sms-card-phone"></span>
+          </div>
+          <p class="sms-card-note">Demo only: no real texts are sent. This is what would arrive on your phone.</p>
+          <p id="status-sms-empty" class="sms-empty"></p>
+          <!-- aria-live: screen readers read out new texts as they arrive. -->
+          <ul id="status-sms-list" class="sms-thread" aria-live="polite"></ul>
+        </div>
       </div>
     </section>
 
@@ -705,6 +729,7 @@
   <script src="js/helpers.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/queue.js"></script>
+  <script src="js/sms-alerts.js"></script>
   <script src="js/views/new-patient.js"></script>
   <script src="js/views/patient-status.js"></script>
   <script src="js/views/admin.js"></script>

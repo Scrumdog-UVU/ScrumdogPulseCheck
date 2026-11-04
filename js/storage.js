@@ -54,7 +54,8 @@ const STORAGE_KEYS = {
   THEME: 'pulsecheck_theme',                       // user theme choice: "light" or "dark"
   CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
   ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
-  DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts' // patient ids that closed their "It's your turn" alert
+  DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts', // patient ids that closed their "It's your turn" alert
+  SMS_MESSAGES: 'pulsecheck_sms_messages'          // pretend text messages "sent" to patients (js/sms-alerts.js)
 };
 
 /**
@@ -516,6 +517,87 @@ function getDismissedTurnAlertIds() {
     console.error('Saved turn-alert data was unreadable, starting fresh.', error);
     return [];
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED SMS TEXT MESSAGES - "Your turn is coming up!"
+ * The texts the clinic has "sent" to patients. This demo can't send real
+ * texts, so js/sms-alerts.js saves them here instead and the My Status view
+ * shows them. Each saved text looks like this:
+ *
+ *   {
+ *     id:        "1695400000000-ab12"    // unique id, never shown to users
+ *     patientId: "1695300000000-cd34"    // which patient it was sent to
+ *     phone:     "(555) 123-4567"        // the number it "went" to
+ *     alertType: "turn-approaching"      // one of SMS_ALERT_TYPE in js/sms-alerts.js
+ *     text:      "PulseCheck: Your turn is coming up! ..."
+ *     sentAt:    1695400600000           // Date.now() when it was "sent"
+ *   }
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Loads every saved text message, oldest first.
+ *
+ * @returns {Array<Object>} Text message records. Empty list if none.
+ */
+function getAllSmsMessages() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.SMS_MESSAGES);
+  if (!savedText) return [];
+
+  try {
+    return JSON.parse(savedText);
+  } catch (error) {
+    console.error('Saved text message data was unreadable, starting fresh.', error);
+    return [];
+  }
+}
+
+/**
+ * Loads the texts sent to one patient, oldest first (the order a phone
+ * shows them in).
+ *
+ * @param {string} patientId
+ * @returns {Array<Object>} That patient's text message records.
+ */
+function getSmsMessagesForPatient(patientId) {
+  return getAllSmsMessages().filter((message) => message.patientId === patientId);
+}
+
+/**
+ * Checks whether a patient has already been sent a certain kind of text,
+ * so the same text is never sent twice.
+ *
+ * @param {string} patientId
+ * @param {string} alertType - One of SMS_ALERT_TYPE in js/sms-alerts.js.
+ * @returns {boolean} True if that text was already sent.
+ */
+function hasSentSmsMessage(patientId, alertType) {
+  return getSmsMessagesForPatient(patientId).some((message) => message.alertType === alertType);
+}
+
+/**
+ * Saves a new text message and returns it.
+ *
+ * @param {Object} details - { patientId, phone, alertType, text }
+ * @returns {Object} The complete saved text message record.
+ */
+function addSmsMessage(details) {
+  const now = Date.now();
+
+  const newMessage = {
+    id: `${now}-${Math.random().toString(36).slice(2, 6)}`,
+    patientId: details.patientId,
+    phone: details.phone,
+    alertType: details.alertType,
+    text: details.text,
+    sentAt: now
+  };
+
+  const messages = getAllSmsMessages();
+  messages.push(newMessage);
+  localStorage.setItem(STORAGE_KEYS.SMS_MESSAGES, JSON.stringify(messages));
+
+  return newMessage;
 }
 
 /* ---------------------------------------------------------------------------
