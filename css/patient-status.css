@@ -225,3 +225,98 @@
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED SMS TEXT MESSAGES ("Your turn is coming up!")
+ * The "Text Messages" card under the ticket, styled like a phone's
+ * messaging app. Filled in by fillSmsInbox() in js/views/patient-status.js.
+ * ------------------------------------------------------------------------- */
+.sms-card {
+  max-width: 600px;
+  margin: 1.5rem auto 0;          /* space between this card and the ticket above */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* "Text Messages" on the left, the phone number on the right. */
+.sms-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sms-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.sms-card-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: var(--accent-teal);
+  flex-shrink: 0;
+}
+
+/* The phone number, the "Demo only" line, and the "No texts yet" line. */
+.sms-card-phone,
+.sms-card-note,
+.sms-empty {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* The list of texts. list-style: none hides the bullet dots. */
+.sms-thread {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* One text = one speech bubble. The small bottom-left corner makes it look
+   like a message you received on a phone. */
+.sms-bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.9rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--accent-teal);
+  border-radius: 16px 16px 16px 4px;
+}
+
+.sms-bubble-text {
+  font-size: 0.95rem;
+}
+
+/* The time the text was sent, e.g. "2:45 PM". */
+.sms-bubble-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* The newest text "pops" in when it arrives. */
+.sms-bubble:last-child {
+  animation: sms-bubble-pop 0.35s ease-out;
+}
+
+@keyframes sms-bubble-pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* People who turn on "reduce motion" get the text without the pop. */
+@media (prefers-reduced-motion: reduce) {
+  .sms-bubble:last-child {
+    animation: none;
+  }
+}

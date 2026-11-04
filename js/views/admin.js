@@ -171,6 +171,10 @@ function handleAdminAction(action, patientId) {
  * is shown or the data changes.
  */
 function renderAdminView() {
+  // Staff actions (Call In, Mark Done, etc.) move the line, so "send" any
+  // texts that are now due to patients who opted in. See js/sms-alerts.js.
+  sendDueSmsAlerts();
+
   const allPatients = getAllPatients();
 
   // --- Summary counts at the top ---------------------------------------
