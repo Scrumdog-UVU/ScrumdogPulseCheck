@@ -123,6 +123,16 @@ function initAdminView() {
 
   // Event listeners for Merge Duplicate Patients Modal
   initMergeModal();
+
+  // Keep the audit log searchable without recording each keystroke as an event.
+  ['admin-audit-patient-filter', 'admin-audit-user-filter'].forEach((filterId) => {
+    document.getElementById(filterId).addEventListener('input', renderAuditLog);
+  });
+  document.getElementById('admin-audit-review').addEventListener('click', () => {
+    recordAuditEvent({ action: 'review', resourceType: 'audit-log' });
+    renderAuditLog();
+  });
+  document.getElementById('admin-audit-export').addEventListener('click', exportAuditLog);
 }
 
 /**
@@ -208,9 +218,12 @@ function renderAdminView() {
   const resetBtn = document.getElementById('admin-reset-btn');
   if (clearFinishedBtn) clearFinishedBtn.hidden = !canReset;
   if (resetBtn) resetBtn.hidden = !canReset;
+  const auditCard = document.getElementById('admin-audit-card');
+  if (auditCard) auditCard.hidden = !hasPermission('canManageRoles');
 
   // --- Duplicate Patient Detection Banner ------------------------------
   renderDuplicateAlert();
+  renderAuditLog();
 
   // --- Today's Key Metrics Dashboard -----------------------------------
   renderKeyMetrics(allPatients);
@@ -279,6 +292,69 @@ function renderAdminView() {
     filteredNoshow,
     noshowEmptyText
   );
+}
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED AUDIT LOG
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Draws filtered audit events for a simple patient or user review.
+ * @returns {void}
+ */
+function renderAuditLog() {
+  const list = document.getElementById('admin-audit-list');
+  if (!list) return;
+  const patientFilter = document.getElementById('admin-audit-patient-filter').value.trim().toLowerCase();
+  const userFilter = document.getElementById('admin-audit-user-filter').value.trim().toLowerCase();
+  const events = getAuditEvents().filter((event) => {
+    const matchesPatient = !patientFilter || String(event.resourceId || '').toLowerCase().includes(patientFilter);
+    const matchesUser = !userFilter || `${event.userId} ${event.role}`.toLowerCase().includes(userFilter);
+    return matchesPatient && matchesUser;
+  });
+  document.getElementById('admin-audit-count').textContent = `${events.length} event${events.length === 1 ? '' : 's'} shown`;
+  if (events.length === 0) {
+    list.innerHTML = '<p class="empty-msg">No audit events match. Patient updates and role changes appear here.</p>';
+    return;
+  }
+  list.innerHTML = events.map((event) => `
+    <article class="audit-event-row">
+      <div class="audit-event-main">
+        <strong>${escapeHTML(event.action)}</strong>
+        <span>${escapeHTML(event.resourceType)} ID: ${escapeHTML(event.resourceId || '—')}</span>
+        <span>${escapeHTML(event.userId)} · ${escapeHTML(event.role)}</span>
+      </div>
+      <div class="audit-event-meta">
+        <time datetime="${escapeHTML(event.timestamp)}">${escapeHTML(new Date(event.timestamp).toLocaleString())}</time>
+        <span>${escapeHTML(event.outcome)} · ${escapeHTML(event.source)}</span>
+        <small>${escapeHTML(event.serviceName)} · ${escapeHTML(event.client)}</small>
+        <small>Request ${escapeHTML(event.requestId)}</small>
+      </div>
+    </article>
+  `).join('');
+}
+
+/**
+ * Downloads the currently filtered audit events as a CSV report.
+ * @returns {void}
+ */
+function exportAuditLog() {
+  recordAuditEvent({ action: 'export', resourceType: 'audit-log', resourceId: null });
+  const patientFilter = document.getElementById('admin-audit-patient-filter').value.trim().toLowerCase();
+  const userFilter = document.getElementById('admin-audit-user-filter').value.trim().toLowerCase();
+  const events = getAuditEvents().filter((event) =>
+    (!patientFilter || String(event.resourceId || '').toLowerCase().includes(patientFilter)) &&
+    (!userFilter || `${event.userId} ${event.role}`.toLowerCase().includes(userFilter))
+  );
+  const columns = ['timestamp', 'userId', 'role', 'action', 'resourceType', 'resourceId', 'source', 'client', 'serviceName', 'outcome', 'requestId'];
+  const csvCell = (value) => `"${String(value || '').replace(/"/g, '""')}"`;
+  const csvText = [columns.join(','), ...events.map((event) => columns.map((column) => csvCell(event[column])).join(','))].join('\r\n');
+  const downloadUrl = URL.createObjectURL(new Blob([csvText], { type: 'text/csv;charset=utf-8' }));
+  const downloadLink = document.createElement('a');
+  downloadLink.href = downloadUrl;
+  downloadLink.download = 'pulsecheck-audit-demo.csv';
+  downloadLink.click();
+  URL.revokeObjectURL(downloadUrl);
 }
 
 /**

@@ -55,8 +55,56 @@ const STORAGE_KEYS = {
   CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
   ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
   DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts', // patient ids that closed their "It's your turn" alert
-  SMS_MESSAGES: 'pulsecheck_sms_messages'          // pretend text messages "sent" to patients (js/sms-alerts.js)
+  SMS_MESSAGES: 'pulsecheck_sms_messages',         // pretend text messages "sent" to patients (js/sms-alerts.js)
+  AUDIT_EVENTS: 'pulsecheck_audit_events'          // simulated audit events for this browser demo
 };
+
+/* ---------------------------------------------------------------------------
+ * SIMULATED AUDIT LOG
+ * This browser-only record demonstrates an audit event shape. It is not
+ * secure, immutable, centrally stored, or suitable for real ePHI.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Loads the simulated audit events, newest first.
+ * @returns {Array<Object>} Saved audit event records.
+ */
+function getAuditEvents() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.AUDIT_EVENTS);
+  if (!savedText) return [];
+  try { return JSON.parse(savedText); }
+  catch (error) {
+    console.error('Saved audit events were unreadable, starting with an empty list.', error);
+    return [];
+  }
+}
+
+/**
+ * Adds one structured demo audit event without patient health details.
+ * @param {Object} details - Action, resource ID, outcome, and optional context.
+ * @returns {Object} The saved audit event.
+ */
+function recordAuditEvent(details) {
+  const event = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: new Date().toISOString(),
+    userId: details.userId || `demo-${getCurrentRole()}`,
+    role: details.role || getCurrentRole(),
+    action: details.action,
+    resourceType: details.resourceType || 'patient',
+    resourceId: details.resourceId || null,
+    source: 'Browser demo',
+    client: navigator.userAgent,
+    serviceName: 'PulseCheck local demo',
+    outcome: details.outcome || 'success',
+    requestId: `demo-${Math.random().toString(36).slice(2, 10)}`
+  };
+  const events = getAuditEvents();
+  events.unshift(event);
+  // Keep local demo storage bounded; real audit retention would be governed by policy.
+  localStorage.setItem(STORAGE_KEYS.AUDIT_EVENTS, JSON.stringify(events.slice(0, 2000)));
+  return event;
+}
 
 /**
  * Roles available in the system for Role-Based Access Control (RBAC).
@@ -233,6 +281,7 @@ function addPatient(details) {
   const patients = getAllPatients();
   patients.push(newPatient);
   saveAllPatients(patients);
+  recordAuditEvent({ action: 'create', resourceId: newPatient.id });
 
   return newPatient;
 }
@@ -245,10 +294,14 @@ function addPatient(details) {
  * @param {Object} changes - Only the fields you want to change.
  */
 function updatePatient(patientId, changes) {
+  const existingPatient = getPatientById(patientId);
   const patients = getAllPatients().map((patient) =>
     patient.id === patientId ? { ...patient, ...changes } : patient
   );
   saveAllPatients(patients);
+  if (existingPatient) {
+    recordAuditEvent({ action: 'update', resourceId: patientId });
+  }
 }
 
 /**
@@ -257,8 +310,10 @@ function updatePatient(patientId, changes) {
  * @param {string} patientId
  */
 function removePatient(patientId) {
+  const existed = Boolean(getPatientById(patientId));
   const patients = getAllPatients().filter((patient) => patient.id !== patientId);
   saveAllPatients(patients);
+  if (existed) recordAuditEvent({ action: 'delete', resourceId: patientId });
 }
 
 /**
@@ -266,8 +321,11 @@ function removePatient(patientId) {
  * "Clear Finished Visits" button.
  */
 function removeFinishedPatients() {
-  const patients = getAllPatients().filter((patient) => patient.status !== PATIENT_STATUS.DONE);
+  const allPatients = getAllPatients();
+  const finishedPatients = allPatients.filter((patient) => patient.status === PATIENT_STATUS.DONE);
+  const patients = allPatients.filter((patient) => patient.status !== PATIENT_STATUS.DONE);
   saveAllPatients(patients);
+  finishedPatients.forEach((patient) => recordAuditEvent({ action: 'delete', resourceId: patient.id }));
 }
 
 /**
@@ -429,6 +487,8 @@ function mergePatients(primaryPatientId, secondaryPatientId) {
     .filter((p) => p.id !== secondaryPatientId)
     .map((p) => (p.id === primaryPatientId ? updatedPrimary : p));
   saveAllPatients(allPatients);
+  recordAuditEvent({ action: 'update', resourceId: primaryPatientId });
+  recordAuditEvent({ action: 'delete', resourceId: secondaryPatientId });
 
   // 10. Re-assign SMS messages from secondary patient to primary patient
   const allSms = getAllSmsMessages().map((msg) => {
@@ -561,6 +621,7 @@ function addSurvey(details) {
   const surveys = getAllSurveys();
   surveys.push(newSurvey);
   localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(surveys));
+  recordAuditEvent({ action: 'create', resourceType: 'survey', resourceId: newSurvey.patientId });
 
   return newSurvey;
 }
@@ -591,6 +652,7 @@ function getCurrentRole() {
 function setCurrentRole(role) {
   if (Object.values(USER_ROLES).includes(role)) {
     localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, role);
+    recordAuditEvent({ action: 'permission change', resourceType: 'role', resourceId: role });
   }
 }
 
@@ -642,6 +704,7 @@ function updateRolePermission(role, permissionKey, value) {
   if (permissions[role] && permissionKey in DEFAULT_ROLE_PERMISSIONS[USER_ROLES.ADMIN]) {
     permissions[role][permissionKey] = Boolean(value);
     saveRolePermissions(permissions);
+    recordAuditEvent({ action: 'permission change', resourceType: 'role', resourceId: role });
   }
 }
 

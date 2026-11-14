@@ -608,6 +608,26 @@
         <button type="button" id="admin-clear-finished-btn" class="btn btn-secondary">Clear Finished Visits</button>
         <button type="button" id="admin-reset-btn" class="btn btn-danger">Reset All Demo Data</button>
       </div>
+
+      <!-- Audit events are a browser-only simulation; no real HIPAA compliance is implied. -->
+      <section id="admin-audit-card" class="card audit-log-card" aria-labelledby="admin-audit-title">
+        <div class="audit-log-heading">
+          <div>
+            <h2 id="admin-audit-title">Audit Log (Demo)</h2>
+            <p class="audit-demo-notice">Simulated browser log. Editable, deletable, and capped at 2,000 events. No real authentication, encryption, immutable storage, IP address, or six-year retention is provided.</p>
+          </div>
+          <button type="button" id="admin-audit-review" class="btn btn-secondary btn-small">Record Review</button>
+          <button type="button" id="admin-audit-export" class="btn btn-secondary btn-small">Export CSV</button>
+        </div>
+        <div class="audit-filters">
+          <label for="admin-audit-patient-filter">Patient record ID</label>
+          <input id="admin-audit-patient-filter" type="search" placeholder="Filter by patient ID">
+          <label for="admin-audit-user-filter">User ID</label>
+          <input id="admin-audit-user-filter" type="search" placeholder="Filter by user ID or role">
+        </div>
+        <p id="admin-audit-count" class="audit-log-count" aria-live="polite"></p>
+        <div id="admin-audit-list" class="audit-log-list" aria-live="polite"></div>
+      </section>
     </section>
 
     <!-- =================================================================

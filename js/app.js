@@ -230,6 +230,16 @@ function showView(viewName) {
   currentViewName = viewName;
   saveViewName(viewName);
 
+  // Record a view-level access when patient details are opened in this demo.
+  // Patient IDs are used as references; patient health details are never copied
+  // into the simulated audit event.
+  if (viewName === 'admin') {
+    getAllPatients().forEach((patient) => recordAuditEvent({ action: 'view', resourceId: patient.id }));
+  } else if (viewName === 'patient-status') {
+    const currentPatient = getPatientById(getCurrentPatientId());
+    if (currentPatient) recordAuditEvent({ action: 'view', resourceId: currentPatient.id });
+  }
+
   // Show only the matching <section>.
   document.querySelectorAll('.view').forEach((section) => {
     section.hidden = section.id !== `view-${viewName}`;
