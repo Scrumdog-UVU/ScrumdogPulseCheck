@@ -16,6 +16,99 @@
   margin-bottom: 1.5rem;
 }
 
+/* ---------------------------------------------------------------------------
+ * DEMO AUDIT LOG
+ * ------------------------------------------------------------------------- */
+.audit-log-card {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.audit-log-heading,
+.audit-event-row,
+.audit-event-main,
+.audit-event-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.audit-log-heading {
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.audit-demo-notice,
+.audit-log-count,
+.audit-event-meta,
+.audit-event-main span {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.audit-demo-notice {
+  margin-top: 0.25rem;
+}
+
+.audit-filters {
+  display: grid;
+  grid-template-columns: auto minmax(140px, 1fr) auto minmax(140px, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.audit-filters label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.audit-filters input {
+  min-width: 0;
+  width: 100%;
+}
+
+.audit-log-count {
+  margin-bottom: 0.5rem;
+}
+
+.audit-log-list {
+  max-height: 420px;
+  overflow-y: auto;
+  border-top: 1px solid var(--card-border);
+}
+
+.audit-event-row {
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.audit-event-main,
+.audit-event-meta {
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.audit-event-meta {
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .audit-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-event-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .audit-event-meta {
+    text-align: left;
+  }
+}
+
 .summary-box {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
