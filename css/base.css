@@ -446,3 +446,107 @@ textarea:focus {
     border-radius: var(--radius); /* a full "pill" shape looks odd on two lines */
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * LOW-VISION MODE - shared by all views, independently of light/dark mode.
+ * Rem-based sizes grow together; existing large headings remain larger.
+ * Darker action backgrounds keep white button text readable in either theme.
+ * ------------------------------------------------------------------------- */
+html[data-low-vision] {
+  font-size: 150%;
+  --text-secondary: #ffffff;
+  --card-border: #94a3b8;
+  --input-border: #94a3b8;
+  --accent-color: #85baff;
+  --accent-hover: #1746a2;
+  --accent-teal: #60e0cf;
+  --status-called: #09645d;
+  --status-no-show: #a61b1b;
+  --danger-color: #a61b1b;
+  --danger-hover: #851616;
+}
+
+html[data-low-vision][data-theme="light"] {
+  --text-secondary: #0f172a;
+  --card-border: #475569;
+  --input-border: #475569;
+  --accent-color: #1746a2;
+  --accent-teal: #09645d;
+}
+
+/* Small labels and notes must grow too, rather than staying below body size. */
+[data-low-vision] :is(label, legend, .theme-toggle, .role-select-label,
+  .role-select, .view-tab, .btn-small, .stat-label, .status-badge,
+  .urgent-badge, .footer-note, .privacy-summary-intro, .privacy-summary-footnote,
+  .privacy-summary-list, .sms-card-phone, .sms-card-note, .sms-empty,
+  .sms-bubble-time, .turn-alert-app, .survey-item-date) {
+  font-size: 1rem;
+}
+
+[data-low-vision] :is(.btn-primary, .view-tab.active) {
+  background-color: var(--accent-hover);
+}
+
+[data-low-vision] :is(.card, input, select, textarea, .theme-toggle) {
+  border-width: 2px;
+}
+
+[data-low-vision] :is(button, select, input:not([type="radio"]):not([type="checkbox"])) {
+  min-height: 48px;
+}
+
+[data-low-vision] :focus-visible {
+  outline: 4px solid var(--text-primary);
+  outline-offset: 4px;
+}
+
+/* Let enlarged text wrap, and keep the taller header out of the reading area. */
+[data-low-vision] .topbar {
+  position: static;
+}
+
+[data-low-vision] .view-switcher {
+  flex-wrap: wrap;
+  border-radius: var(--radius);
+}
+
+[data-low-vision] main {
+  overflow-wrap: anywhere;
+}
+
+[data-low-vision] :is(.ticket-stats, .ticket-badge-group, .survey-item-header) {
+  flex-wrap: wrap;
+}
+
+/* Solid text avoids low contrast from the decorative gradient. */
+[data-low-vision] .slogan {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* On narrow screens leave enough room for the date wheel's month names.
+   Keep its 38px row height: the picker JavaScript relies on that geometry. */
+@media (max-width: 640px) {
+  [data-low-vision] main {
+    padding: 1rem 0.5rem;
+  }
+
+  [data-low-vision] .card {
+    padding: 0.75rem 0.5rem;
+  }
+
+  [data-low-vision] .topbar {
+    padding: 0.75rem 0.5rem;
+  }
+
+  [data-low-vision] .role-selector-wrapper {
+    flex-wrap: wrap;
+    max-width: 100%;
+    border-radius: var(--radius);
+  }
+
+  [data-low-vision] .role-select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
