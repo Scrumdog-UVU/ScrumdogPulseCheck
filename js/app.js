@@ -40,6 +40,7 @@ let currentViewName = DEFAULT_VIEW;
 document.addEventListener('DOMContentLoaded', () => {
   // 0. Initialize theme (Light Mode / Dark Mode) preference and Role Selector.
   initTheme();
+  initLowVisionMode();
   initRoleSelector();
 
   // 1. Let every view connect its buttons and forms.
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //    as staff), a change in one tab fires a "storage" event in the other.
   //    Redraw so both tabs stay in sync and show live queue position updates.
   window.addEventListener('storage', () => {
+    applyLowVisionMode(getSavedLowVisionMode());
     updateNavigationForRole();
     if (VIEWS[currentViewName]) {
       VIEWS[currentViewName].render();
@@ -261,4 +263,34 @@ function showView(viewName) {
   if (activeTitle) {
     activeTitle.focus();
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * LOW-VISION DISPLAY - kept separate from the light/dark theme preference.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Restores the saved display mode and connects its keyboard-accessible button.
+ * @returns {void}
+ */
+function initLowVisionMode() {
+  const toggleButton = document.getElementById('low-vision-toggle');
+  applyLowVisionMode(getSavedLowVisionMode());
+  toggleButton.addEventListener('click', () => {
+    const enabled = toggleButton.getAttribute('aria-pressed') !== 'true';
+    applyLowVisionMode(enabled);
+    saveLowVisionMode(enabled);
+  });
+}
+
+/**
+ * Enlarges the whole app and keeps the button's visible and spoken state in sync.
+ * @param {boolean} enabled - Whether the low-vision display is enabled.
+ * @returns {void}
+ */
+function applyLowVisionMode(enabled) {
+  document.documentElement.toggleAttribute('data-low-vision', enabled);
+  const toggleButton = document.getElementById('low-vision-toggle');
+  toggleButton.setAttribute('aria-pressed', String(enabled));
+  toggleButton.textContent = `Low Vision Mode: ${enabled ? 'On' : 'Off'}`;
 }

@@ -37,3 +37,11 @@ Staff View to start over.
 
 Read [AGENTS.md](AGENTS.md) before making changes. It explains where code
 goes, the commenting rules, and how to avoid merge conflicts.
+
+## Large-text, low-vision display
+
+Use **Low Vision Mode: Off** in the top bar to turn on larger text, stronger
+contrast, and clearer keyboard focus outlines throughout the app. The button
+changes to **Low Vision Mode: On**; select it again to restore the standard
+display. The preference is saved in this browser and works with either Light
+Mode or Dark Mode. On small screens, wide staff tables can scroll horizontally.

@@ -956,3 +956,23 @@
     width: 100%;
   }
 }
+
+/* Keep enlarged staff controls within their cards; wide permission tables
+   scroll inside their existing wrapper instead of widening the whole page. */
+[data-low-vision] #view-admin .card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+[data-low-vision] .report-filters-group {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+[data-low-vision] .report-filter-select {
+  max-width: 100%;
+}
+
+[data-low-vision] #view-admin {
+  overflow-x: auto;
+}

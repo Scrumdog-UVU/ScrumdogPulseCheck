@@ -51,6 +51,7 @@ const STORAGE_KEYS = {
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
   CURRENT_VIEW: 'pulsecheck_current_view',          // which view was open last time
   SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
+  LOW_VISION: 'pulsecheck_low_vision',             // larger text and stronger contrast
   THEME: 'pulsecheck_theme',                       // user theme choice: "light" or "dark"
   CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
   ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
@@ -856,4 +857,32 @@ function addSmsMessage(details) {
 /** Wipes every piece of PulseCheck data from this browser. */
 function clearAllData() {
   Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+}
+
+/* ---- LOW-VISION DISPLAY PREFERENCE ---- */
+
+/**
+ * Reads the display preference, defaulting to the standard display.
+ * @returns {boolean} Whether low-vision mode was saved as enabled.
+ */
+function getSavedLowVisionMode() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.LOW_VISION) === 'true';
+  } catch (error) {
+    // The display toggle still works when the browser blocks saved preferences.
+    return false;
+  }
+}
+
+/**
+ * Remembers the display preference without changing any patient records.
+ * @param {boolean} enabled - Whether low-vision mode should stay enabled.
+ * @returns {void}
+ */
+function saveLowVisionMode(enabled) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOW_VISION, String(enabled));
+  } catch (error) {
+    // Keep the selected display usable even if browser storage is unavailable.
+  }
 }
