@@ -23,6 +23,7 @@ const ADMIN_ACTIONS = {
   MARK_DONE: 'mark-done',     // CALLED  -> DONE
   TOGGLE_URGENT: 'toggle-urgent', // toggle isUrgent flag (true/false)
   NO_SHOW: 'no-show',         // WAITING/CALLED -> NO_SHOW
+  UNDO_CHECK_IN: 'undo-check-in', // remove an accidental check-in while still waiting
   REMOVE: 'remove',           // delete the patient entirely
   MERGE: 'merge'              // open merge dialog for this patient
 };
@@ -174,6 +175,13 @@ function handleAdminAction(action, patientId) {
 
   } else if (action === ADMIN_ACTIONS.REMOVE) {
     if (!confirm('Remove this patient from the queue?')) return;
+    removePatient(patientId);
+
+  } else if (action === ADMIN_ACTIONS.UNDO_CHECK_IN) {
+    // Undo is available only before staff call the patient in.
+    const patient = getPatientById(patientId);
+    if (!patient || patient.status !== PATIENT_STATUS.WAITING) return;
+    if (!confirm('Undo this check-in? The patient will be removed from the queue.')) return;
     removePatient(patientId);
 
   } else if (action === ADMIN_ACTIONS.MERGE) {
@@ -450,7 +458,7 @@ function buildPatientRow(patient, position) {
                 urgentBtn +
                 mergeBtn +
                 actionButton(ADMIN_ACTIONS.NO_SHOW, 'No-Show', 'btn-secondary', patient.id) +
-                actionButton(ADMIN_ACTIONS.REMOVE, 'Remove', 'btn-secondary', patient.id);
+                actionButton(ADMIN_ACTIONS.UNDO_CHECK_IN, 'Undo Check-In', 'btn-secondary', patient.id);
     } else if (patient.status === PATIENT_STATUS.CALLED) {
       buttons = actionButton(ADMIN_ACTIONS.MARK_DONE, 'Mark Done', 'btn-primary', patient.id) +
                 urgentBtn +
