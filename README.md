@@ -32,6 +32,12 @@ Tip: try the full flow in one sitting. Check a patient in, watch them on
 **My Status**, then switch to **Staff View** to call them in and mark them
 done. Their status changes right away.
 
+The simulated patient session expires after **60 minutes without activity**.
+The app returns to New Patient check-in when the session expires. It uses a
+browser cookie when available and a local-storage fallback for browsers that
+block cookies on `file://` pages. This is demo behavior, not secure
+authentication.
+
 All data is saved only in your browser. Use **Reset All Demo Data** in the
 Staff View to start over.
 

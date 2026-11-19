@@ -46,7 +46,7 @@ function initPatientStatusView() {
 
     removePatient(patientId);
     setCurrentPatientId(null);
-    renderPatientStatusView();
+    showView('new-patient');
   });
 
   // The "x" on the "It's your turn" notification closes it for good.
