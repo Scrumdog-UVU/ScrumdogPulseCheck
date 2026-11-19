@@ -160,6 +160,7 @@ function handleAdminAction(action, patientId) {
     const existing = getPatientById(patientId);
     updatePatient(patientId, {
       status: PATIENT_STATUS.CALLED,
+      careStage: 'in-triage',
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now
     });
 
@@ -167,6 +168,7 @@ function handleAdminAction(action, patientId) {
     const existing = getPatientById(patientId);
     updatePatient(patientId, {
       status: PATIENT_STATUS.DONE,
+      careStage: 'discharged',
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now,
       completedAt: now
     });
