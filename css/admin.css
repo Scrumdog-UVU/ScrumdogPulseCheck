@@ -859,6 +859,13 @@
   background-color: var(--danger-color);
 }
 
+/* Native rating bars keep the trend report readable without inline styles. */
+.satisfaction-rating-bar {
+  width: 100%;
+  height: 0.7rem;
+  accent-color: var(--accent-teal);
+}
+
 /* ---------------------------------------------------------------------------
  * ROLE-BASED ACCESS CONTROL (RBAC) MATRIX CARD
  * ------------------------------------------------------------------------- */

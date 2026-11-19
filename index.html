@@ -601,6 +601,29 @@
         </div>
       </div>
 
+      <!-- Patient Satisfaction Trend Report. Survey records are summarized here; individual comments stay in the Survey view. -->
+      <div id="admin-satisfaction-trend-card" class="card admin-analytics-card">
+        <div class="analytics-header">
+          <div>
+            <h2 class="queue-title">Patient Satisfaction Trend</h2>
+            <p class="queue-hint">Monthly survey ratings and response volume. Individual feedback stays in the Survey view.</p>
+          </div>
+          <div class="report-filters-group">
+            <label for="admin-satisfaction-period" class="sr-only">Satisfaction report timeframe</label>
+            <select id="admin-satisfaction-period" class="report-filter-select" aria-label="Select satisfaction report timeframe">
+              <option value="6months">Last 6 Months</option>
+              <option value="12months">Last 12 Months</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+        <div id="admin-satisfaction-summary" class="waittime-summary-stats" aria-live="polite"></div>
+        <div class="waittime-breakdown-section">
+          <h3 class="breakdown-subtitle">Monthly Survey Results</h3>
+          <div id="admin-satisfaction-trend-table"></div>
+        </div>
+      </div>
+
       <!-- Role-Based Access Control (RBAC) Permissions Management Card -->
       <div id="admin-permissions-card" class="card rbac-card" hidden>
         <h2 class="queue-title">Role-Based Access Control &amp; Permissions</h2>

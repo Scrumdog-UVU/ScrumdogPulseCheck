@@ -122,6 +122,12 @@ function initAdminView() {
     });
   }
 
+  // Refresh the satisfaction report when its timeframe changes.
+  const satisfactionPeriod = document.getElementById('admin-satisfaction-period');
+  if (satisfactionPeriod) {
+    satisfactionPeriod.addEventListener('change', renderPatientSatisfactionTrend);
+  }
+
   // Event listeners for Merge Duplicate Patients Modal
   initMergeModal();
 
@@ -238,6 +244,9 @@ function renderAdminView() {
 
   // --- Historical Wait-Time Reports (Just below key metrics) -----------
   renderHistoricalWaitTimeReports(allPatients);
+
+  // --- Patient Satisfaction Trend --------------------------------------
+  renderPatientSatisfactionTrend();
 
   // --- Role Permissions Management Matrix Card -------------------------
   renderPermissionsCard();
@@ -949,6 +958,136 @@ function renderHistoricalWaitTimeReports(allPatients) {
   `;
 
   chartContainer.innerHTML = chartHtml;
+}
+
+/**
+ * Summarizes survey ratings by month for the Staff View satisfaction report.
+ *
+ * @returns {void} Draws report totals and the monthly rating trend table.
+ */
+function renderPatientSatisfactionTrend() {
+  const summaryContainer = document.getElementById('admin-satisfaction-summary');
+  const tableContainer = document.getElementById('admin-satisfaction-trend-table');
+  if (!summaryContainer || !tableContainer) return;
+
+  const periodSelect = document.getElementById('admin-satisfaction-period');
+  const selectedPeriod = periodSelect ? periodSelect.value : '6months';
+  const now = new Date();
+  const nowMs = now.getTime();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const allSurveys = getAllSurveys().filter((survey) => {
+    const createdAt = Number(survey.createdAt);
+    const rating = Number(survey.rating);
+    return Number.isFinite(createdAt) && createdAt <= nowMs &&
+      Number.isFinite(rating) && rating >= 1 && rating <= 5;
+  });
+
+  let firstMonth = null;
+  if (selectedPeriod === '6months' || selectedPeriod === '12months') {
+    const monthsToShow = selectedPeriod === '6months' ? 6 : 12;
+    firstMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - monthsToShow + 1, 1);
+  } else if (allSurveys.length > 0) {
+    const earliestSurvey = allSurveys.reduce((earliest, survey) =>
+      Number(survey.createdAt) < Number(earliest.createdAt) ? survey : earliest
+    );
+    const earliestDate = new Date(Number(earliestSurvey.createdAt));
+    firstMonth = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
+  }
+
+  const filteredSurveys = allSurveys.filter((survey) => {
+    const surveyDate = new Date(Number(survey.createdAt));
+    return !firstMonth || surveyDate >= firstMonth;
+  });
+
+  const monthGroups = {};
+  filteredSurveys.forEach((survey) => {
+    const surveyDate = new Date(Number(survey.createdAt));
+    const monthKey = `${surveyDate.getFullYear()}-${String(surveyDate.getMonth() + 1).padStart(2, '0')}`;
+    if (!monthGroups[monthKey]) monthGroups[monthKey] = [];
+    monthGroups[monthKey].push(Number(survey.rating));
+  });
+
+  const totalResponses = filteredSurveys.length;
+  const averageRating = totalResponses > 0
+    ? filteredSurveys.reduce((sum, survey) => sum + Number(survey.rating), 0) / totalResponses
+    : 0;
+  const positiveResponses = filteredSurveys.filter((survey) => Number(survey.rating) >= 4).length;
+  const positiveShare = totalResponses > 0 ? Math.round((positiveResponses / totalResponses) * 100) : 0;
+
+  summaryContainer.innerHTML = `
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${totalResponses > 0 ? averageRating.toFixed(1) : '—'} <small>/ 5</small></span>
+      <span class="waittime-stat-lbl">Average Rating</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${totalResponses}</span>
+      <span class="waittime-stat-lbl">Survey Responses</span>
+    </div>
+    <div class="waittime-stat-box">
+      <span class="waittime-stat-val">${positiveShare}%</span>
+      <span class="waittime-stat-lbl">Rated 4 or 5 Stars</span>
+    </div>
+  `;
+
+  if (totalResponses === 0) {
+    tableContainer.innerHTML = '<p class="empty-msg">No survey responses are available for this timeframe.</p>';
+    return;
+  }
+
+  if (firstMonth && currentMonth >= firstMonth) {
+    for (let monthDate = new Date(firstMonth); monthDate <= currentMonth; monthDate.setMonth(monthDate.getMonth() + 1)) {
+      const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthGroups[monthKey]) monthGroups[monthKey] = [];
+    }
+  }
+
+  const monthKeys = Object.keys(monthGroups).sort((left, right) => right.localeCompare(left));
+  if (monthKeys.length === 0) {
+    tableContainer.innerHTML = '<p class="empty-msg">No survey responses are available for this timeframe.</p>';
+    return;
+  }
+
+  const rows = monthKeys.map((monthKey) => {
+    const ratings = monthGroups[monthKey];
+    const monthlyAverage = ratings.length > 0
+      ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      : 0;
+    const monthlyPositive = ratings.filter((rating) => rating >= 4).length;
+    const monthlyPositiveShare = ratings.length > 0 ? Math.round((monthlyPositive / ratings.length) * 100) : 0;
+    const [year, month] = monthKey.split('-').map(Number);
+    const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+    const ratingDisplay = ratings.length > 0 ? monthlyAverage.toFixed(1) : '—';
+    const bar = ratings.length > 0
+      ? `<progress class="satisfaction-rating-bar" max="5" value="${monthlyAverage}" aria-label="Average rating ${ratingDisplay} out of 5">${ratingDisplay} out of 5</progress>`
+      : '<span class="row-detail">No responses</span>';
+
+    return `
+      <tr>
+        <td class="report-time-cell">${escapeHTML(monthLabel)}</td>
+        <td><strong>${ratingDisplay}</strong> / 5</td>
+        <td>${ratings.length}</td>
+        <td>${ratings.length > 0 ? `${monthlyPositiveShare}%` : '—'}</td>
+        <td class="report-visual-col">${bar}</td>
+      </tr>
+    `;
+  }).join('');
+
+  tableContainer.innerHTML = `
+    <div class="report-table-wrapper">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Average Rating</th>
+            <th>Responses</th>
+            <th>4–5 Star Share</th>
+            <th class="report-visual-col">Rating Trend</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 /* ---------------------------------------------------------------------------
