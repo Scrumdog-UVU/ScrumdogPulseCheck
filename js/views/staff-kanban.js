@@ -1,6 +1,6 @@
 /*
  * Staff patient Kanban board. See the board markup in index.html and
- * its styles in css/admin.css. This is demo-only, browser-local data.
+ * its styles in css/staff-kanban.css. This is demo-only, browser-local data.
  */
 
 /** The order of the stages in a normal urgent-care visit. */
@@ -58,7 +58,7 @@ function moveKanbanPatient(patientId, nextStage) {
     changes.completedAt = null;
   }
   updatePatient(patientId, changes);
-  renderAdminView();
+  renderStaffKanbanView();
 }
 
 /** Draws the full board from saved records, never from stale DOM cards.
@@ -67,7 +67,7 @@ function moveKanbanPatient(patientId, nextStage) {
 function renderKanbanBoard() {
   const board = document.getElementById('admin-kanban-board');
   if (!board) return;
-  const search = (document.getElementById('admin-search-input').value || '').trim().toLowerCase();
+  const search = (document.getElementById('kanban-search-input').value || '').trim().toLowerCase();
   const patients = getAllPatients().filter((patient) =>
     getKanbanStage(patient) !== null && matchesSearch(patient, search));
   const canMove = hasPermission('canManageQueue');
@@ -124,4 +124,22 @@ function initKanbanBoard() {
     event.preventDefault();
     moveKanbanPatient(event.dataTransfer.getData('text/plain'), column.dataset.kanbanStage);
   });
+}
+
+/** Connects the dedicated board view once when the app starts.
+ * @returns {void}
+ */
+function initStaffKanbanView() {
+  initKanbanBoard();
+  document.getElementById('kanban-search-input').addEventListener('input', renderStaffKanbanView);
+}
+
+/** Refreshes only the dedicated staff board, not the full Staff Queue page.
+ * @returns {void}
+ */
+function renderStaffKanbanView() {
+  renderKanbanBoard();
+  const total = getAllPatients().filter((patient) => getKanbanStage(patient) !== null).length;
+  document.getElementById('kanban-patient-count').textContent =
+    total + (total === 1 ? ' patient' : ' patients') + ' in board';
 }

@@ -23,6 +23,7 @@ const VIEWS = {
   'new-patient':        { init: initNewPatientView,        render: renderNewPatientView },
   'patient-status':     { init: initPatientStatusView,     render: renderPatientStatusView },
   'admin':              { init: initAdminView,             render: renderAdminView },
+  'staff-kanban':       { init: initStaffKanbanView,       render: renderStaffKanbanView },
   'survey':             { init: initSurveyView,            render: renderSurveyView },
   'dashboard':          { init: initDashboardView,         render: renderDashboardView },
   'accepted-insurance': { init: initAcceptedInsuranceView, render: renderAcceptedInsuranceView }
@@ -32,7 +33,7 @@ const VIEWS = {
 const DEFAULT_VIEW = 'new-patient';
 
 /** Views and URL fragment used to enter the staff area. */
-const STAFF_VIEWS = ['admin', 'dashboard'];
+const STAFF_VIEWS = ['admin', 'staff-kanban', 'dashboard'];
 const STAFF_VIEW_HASH = '#view-admin';
 
 /** The name of the view currently on screen. */
@@ -96,6 +97,7 @@ const VIEW_PERMISSIONS = {
   'new-patient': 'canViewNewPatient',
   'patient-status': 'canViewPatientStatus',
   'admin': 'canViewAdmin',
+  'staff-kanban': 'canViewAdmin',
   'survey': 'canViewSurvey',
   'dashboard': 'canViewDashboard',
   'accepted-insurance': 'canViewNewPatient'

@@ -1,14 +1,32 @@
 /*
- * Staff-only patient care Kanban. Markup: index.html; logic: js/views/staff-kanban.js.
+ * Dedicated staff care board. Fits all nine stages in a 3-by-3 desktop grid.
+ * Individual columns scroll only when there are more patient cards than fit.
  */
-.admin-kanban-card { margin-bottom: 1.5rem; }
-.kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding: 0.5rem 0 1rem; align-items: stretch; }
-.kanban-column { flex: 0 0 230px; min-height: 180px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 0.75rem; }
-.kanban-column h3 { font-size: 0.95rem; margin: 0 0 0.75rem; color: var(--text-primary); }
+.kanban-page { width: 100%; max-width: none; }
+.kanban-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.65rem; }
+.kanban-page-heading .view-title { margin-bottom: 0.2rem; }
+.kanban-page-heading .view-subtitle { margin-bottom: 0; }
+.kanban-page-toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+.kanban-page-toolbar label, .kanban-page-toolbar span, .kanban-demo-note { font-size: 0.8rem; color: var(--text-secondary); }
+.kanban-page-toolbar input { width: min(300px, 42vw); }
+.kanban-demo-note { margin-top: 0.4rem; }
+.kanban-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 0.6rem; height: clamp(480px, calc(100dvh - 270px), 1100px); min-height: 0; }
+.kanban-column { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 0.55rem; }
+.kanban-column h3 { font-size: 0.86rem; margin: 0 0 0.4rem; color: var(--text-primary); }
 .kanban-column h3 span { color: var(--text-secondary); }
-.kanban-column-cards { display: flex; flex-direction: column; gap: 0.6rem; }
-.kanban-patient { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: var(--radius); background: var(--card-bg); color: var(--text-primary); cursor: grab; }
-.kanban-patient span, .kanban-patient label { font-size: 0.8rem; color: var(--text-secondary); }
-.kanban-patient select { display: block; width: 100%; margin-top: 0.25rem; }
-.kanban-urgent { color: var(--status-waiting); font-size: 0.8rem; }
+.kanban-column-cards { display: flex; flex-direction: column; gap: 0.4rem; min-height: 0; overflow-y: auto; }
+.kanban-patient { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.45rem 0.6rem; border: 1px solid var(--card-border); border-radius: var(--radius); background: var(--card-bg); color: var(--text-primary); cursor: grab; }
+.kanban-patient span, .kanban-patient label { font-size: 0.75rem; color: var(--text-secondary); }
+.kanban-patient select { display: block; width: 100%; margin-top: 0.2rem; padding: 0.25rem; }
+.kanban-urgent { color: var(--status-waiting); font-size: 0.75rem; }
 .kanban-column:focus-within { outline: 1px solid var(--accent-color); }
+@media (max-width: 720px) {
+  .kanban-page-heading { flex-wrap: wrap; }
+  .kanban-board { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(165px, 1fr)); height: auto; }
+  .kanban-column { min-height: 165px; }
+  .kanban-column-cards { max-height: 220px; }
+}
+@media (max-width: 430px) {
+  .kanban-board { grid-template-columns: 1fr; grid-template-rows: none; }
+  .kanban-page-toolbar { flex-wrap: wrap; }
+}

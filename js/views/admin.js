@@ -32,7 +32,6 @@ const ADMIN_ACTIONS = {
  * Connects the buttons for this view. Called once by js/app.js.
  */
 function initAdminView() {
-  initKanbanBoard();
   // The patient rows are re-created every time the view redraws, so instead
   // of attaching a click handler to every single row button, we attach ONE
   // handler to the whole view and check which button was clicked.
@@ -253,9 +252,6 @@ function renderAdminView() {
 
   // --- Role Permissions Management Matrix Card -------------------------
   renderPermissionsCard();
-
-  // --- Interactive patient care board ----------------------------------
-  renderKanbanBoard();
 
   // --- The two queues --------------------------------------------------
   const appointmentQueueItems = getQueue(VISIT_TYPE.APPOINTMENT).map((patient, index) => ({
