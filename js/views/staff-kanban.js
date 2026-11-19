@@ -16,6 +16,66 @@ const KANBAN_STAGES = [
   ['discharged', 'Discharged']
 ];
 
+// Demo-only operational reminders (minutes), not clinical triage thresholds.
+// null means no automatic wait warning for this stage.
+const KANBAN_WAIT_TARGETS = Object.freeze({
+  'checked-in': 10,
+  'waiting-triage': 15,
+  'in-triage': 20,
+  'waiting-provider': 30,
+  'with-provider': null,
+  'waiting-results': 45,
+  'treatment': null,
+  'ready-discharge': 15,
+  'discharged': null
+});
+
+/** Returns the stage entry time for new and pre-feature patient records. */
+function getKanbanStageStart(patient) {
+  const recorded = Number(patient.careStageEnteredAt);
+  if (Number.isFinite(recorded) && recorded > 0) return recorded;
+  const stage = getKanbanStage(patient);
+  const fallback = stage === 'discharged' ? patient.completedAt :
+    (stage === 'in-triage' || stage === 'with-provider' ? patient.calledAt : patient.checkedInAt);
+  const parsed = Number(fallback);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/** Display duration without suggesting a clinical acuity score. */
+function formatKanbanDuration(minutes) {
+  if (minutes < 60) return minutes + ' min';
+  return Math.floor(minutes / 60) + 'h ' + String(minutes % 60).padStart(2, '0') + 'm';
+}
+
+/** Pure wait state, computed from saved stage entry time. */
+function getKanbanWaitState(patient, now = Date.now()) {
+  const stage = getKanbanStage(patient);
+  const started = getKanbanStageStart(patient);
+  if (!started) return { text: 'Time unavailable', tone: 'unknown', minutes: null };
+  const end = stage === 'discharged' && Number(patient.completedAt) > 0 ?
+    Number(patient.completedAt) : now;
+  const minutes = Math.max(0, Math.floor((end - started) / 60000));
+  const target = KANBAN_WAIT_TARGETS[stage];
+  const tone = target === null || target === undefined || stage === 'discharged' ? 'neutral' :
+    minutes >= target * 2 ? 'overdue' : minutes >= target ? 'warning' : 'normal';
+  return { text: formatKanbanDuration(minutes), tone, minutes };
+}
+
+/** Updates visible time badges without replacing cards or stealing focus. */
+function refreshKanbanWaitIndicators() {
+  const board = document.getElementById('admin-kanban-board');
+  if (!board || board.closest('.view[hidden]')) return;
+  board.querySelectorAll('[data-kanban-timer]').forEach((element) => {
+    const patient = getPatientById(element.dataset.kanbanTimer);
+    if (!patient) return;
+    const wait = getKanbanWaitState(patient);
+    element.textContent = 'In stage: ' + wait.text;
+    element.className = 'kanban-wait kanban-wait--' + wait.tone;
+    element.title = wait.tone === 'overdue' || wait.tone === 'warning' ?
+      'Above demo workflow target; not a clinical priority assessment' : 'Time in current care stage';
+  });
+}
+
 /** Returns a usable stage for both new and older patient records.
  * @param {Object} patient - Saved patient.
  * @returns {string} Stage identifier.
@@ -43,7 +103,7 @@ function moveKanbanPatient(patientId, nextStage) {
   if (getKanbanStage(patient) === nextStage) return;
 
   // Keep the original queue statuses compatible with My Status and reports.
-  const changes = { careStage: nextStage };
+  const changes = { careStage: nextStage, careStageEnteredAt: Date.now() };
   if (nextStage === 'discharged') {
     changes.status = PATIENT_STATUS.DONE;
     changes.completedAt = patient.completedAt || Date.now();
@@ -82,6 +142,7 @@ function renderKanbanBoard() {
       return `<article class="kanban-patient" draggable="${canMove}" data-patient-id="${escapeHTML(patient.id)}">
         <button type="button" class="kanban-patient-open" data-kanban-open="${escapeHTML(patient.id)}" aria-label="View record for ${escapeHTML(patient.name)}">${escapeHTML(patient.name)} <span aria-hidden="true">↗</span></button>
         <span>${escapeHTML(patient.ticketNumber)} · ${escapeHTML(patient.visitType)}</span>
+        <span class="kanban-wait" data-kanban-timer="${escapeHTML(patient.id)}">Time loading…</span>
         ${patient.isUrgent ? '<strong class="kanban-urgent">Urgent priority</strong>' : ''}
         <label>Move to
           <select data-kanban-move="${escapeHTML(patient.id)}" aria-label="Move ${escapeHTML(patient.name)} to stage" ${canMove ? '' : 'disabled'}>
@@ -95,6 +156,7 @@ function renderKanbanBoard() {
       <div class="kanban-column-cards">${cards || '<p class="empty-msg">No patients</p>'}</div>
     </section>`;
   }).join('');
+  refreshKanbanWaitIndicators();
 }
 
 /** Wires accessible dropdown moves and optional mouse drag-and-drop once.
@@ -135,6 +197,9 @@ function initKanbanBoard() {
  */
 function initStaffKanbanView() {
   initKanbanBoard();
+  // Existing app refreshes the view every 30 seconds; this lightweight timer
+  // updates badges each minute without rebuilding cards during interactions.
+  setInterval(refreshKanbanWaitIndicators, 60000);
   document.getElementById('kanban-search-input').addEventListener('input', renderStaffKanbanView);
   const backdrop = document.getElementById('kanban-record-backdrop');
   document.getElementById('kanban-record-close').addEventListener('click', closeKanbanPatientRecord);
@@ -200,6 +265,7 @@ function openKanbanPatientRecord(patientId) {
         ${row('Visit type', display(patient.visitType))}
         ${row('Appointment time', display(patient.appointmentTime))}
         ${row('Care stage', display(stage ? stage[1] : 'Not assigned'))}
+        ${row('Time in stage', display(getKanbanWaitState(patient).text))}
         ${row('Urgent priority', patient.isUrgent ? 'Yes — flagged urgent' : 'No')}
         ${row('Queue status', display(patient.status))}
         ${row('Checked in', dateTime(patient.checkedInAt))}
