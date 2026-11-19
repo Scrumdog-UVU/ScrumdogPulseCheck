@@ -38,6 +38,9 @@ const STAFF_VIEW_HASH = '#view-admin';
 /** The name of the view currently on screen. */
 let currentViewName;
 
+/** Whether this tab has seen an active simulated patient session. */
+let patientSessionWasActive = false;
+
 /* ---------------------------------------------------------------------------
  * START-UP - runs once, as soon as the page has loaded.
  * ------------------------------------------------------------------------- */
@@ -49,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 1. Let every view connect its buttons and forms.
   Object.values(VIEWS).forEach((view) => view.init());
+  initPatientSessionTimeout();
 
   // 2. Make the top-bar buttons (and any other data-go-to-view buttons)
   //    switch views when clicked.
@@ -64,12 +68,15 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('storage', () => {
     applyLowVisionMode(getSavedLowVisionMode());
     updateNavigationForRole();
+    if (checkPatientSessionExpiry()) return;
     refreshCurrentView();
   });
 
   // 4. Automatically refresh the current view every 30 seconds so wait-time
-  //    estimates and queue positions stay up to date as time passes.
+  //    estimates and queue positions stay up to date as time passes, and
+  //    expired patient sessions are logged out even when the page is idle.
   setInterval(() => {
+    if (checkPatientSessionExpiry()) return;
     VIEWS[currentViewName]?.render();
   }, 30000);
 
@@ -157,6 +164,56 @@ function updateNavigationForRole() {
   });
 }
 
+/**
+ * Refreshes the patient session when the user interacts with the page.
+ * The session itself expires after 60 minutes without these interactions.
+ *
+ * @returns {void}
+ */
+function initPatientSessionTimeout() {
+  patientSessionWasActive = Boolean(getCurrentPatientId());
+
+  ['pointerdown', 'keydown', 'wheel'].forEach((eventName) => {
+    document.addEventListener(eventName, handlePatientSessionActivity, { passive: true });
+  });
+}
+
+/**
+ * Extends an active patient session or logs out if the session has expired.
+ *
+ * @returns {void}
+ */
+function handlePatientSessionActivity() {
+  if (getCurrentRole() !== USER_ROLES.PATIENT) return;
+  if (checkPatientSessionExpiry()) return;
+
+  if (refreshCurrentPatientSession()) {
+    patientSessionWasActive = true;
+  }
+}
+
+/**
+ * Detects an expired patient session and returns the patient to check-in.
+ *
+ * @returns {boolean} True if the expired session caused a logout.
+ */
+function checkPatientSessionExpiry() {
+  if (getCurrentRole() !== USER_ROLES.PATIENT) return false;
+
+  if (getCurrentPatientId()) {
+    patientSessionWasActive = true;
+    return false;
+  }
+  if (!patientSessionWasActive) return false;
+
+  setCurrentPatientId(null);
+  patientSessionWasActive = false;
+  if (currentViewName && currentViewName !== DEFAULT_VIEW) {
+    showView(DEFAULT_VIEW);
+  }
+  return true;
+}
+
 /* ---------------------------------------------------------------------------
  * THEME MANAGEMENT - Light mode / Dark mode switch
  * ------------------------------------------------------------------------- */
@@ -219,6 +276,16 @@ function showView(viewName) {
   if (!VIEWS[viewName]) {
     console.error(`showView: there is no view called "${viewName}". Check VIEWS in js/app.js.`);
     return;
+  }
+
+  // My Status requires an active demo patient session. A missing or expired
+  // session sends the patient back to check-in instead of picking someone else.
+  if (viewName === 'patient-status' && getCurrentRole() === USER_ROLES.PATIENT) {
+    if (!getCurrentPatientId()) {
+      viewName = DEFAULT_VIEW;
+    } else {
+      patientSessionWasActive = true;
+    }
   }
 
   // If this role cannot open the requested view, try another in the same area.

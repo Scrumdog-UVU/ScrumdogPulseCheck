@@ -3,12 +3,10 @@
  * js/storage.js - the app's "database".
  * =============================================================================
  * There is no real server or database. Instead we save everything in the
- * browser's localStorage, which keeps data even after the page is closed
- * (but only on this one computer, in this one browser).
+ * browser storage, which keeps demo data on this one computer and browser.
  *
- * THE RULE: this is the ONLY file that should touch localStorage. Every other
- * file saves or loads data by calling the functions below. That way, if the
- * team ever switches to a real database, only this file needs to change.
+ * THE RULE: this is the ONLY file that should touch localStorage or cookies.
+ * Every other file saves or loads data by calling the functions below.
  *
  * -----------------------------------------------------------------------------
  * WHAT A PATIENT RECORD LOOKS LIKE
@@ -49,6 +47,7 @@
 const STORAGE_KEYS = {
   PATIENTS: 'pulsecheck_patients',                 // the list of all patient records
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
+  CURRENT_PATIENT_SESSION: 'pulsecheck_patient_session_fallback', // file:// fallback for the demo session
   CURRENT_VIEW: 'pulsecheck_current_view',          // old saved view, removed on reset
   SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
   LOW_VISION: 'pulsecheck_low_vision',             // larger text and stronger contrast
@@ -116,6 +115,10 @@ const USER_ROLES = {
   FRONT_DESK: 'front_desk', // Front Desk Staff
   PATIENT: 'patient'        // Patient
 };
+
+/** Cookie and inactivity timeout for the simulated patient session. */
+const PATIENT_SESSION_COOKIE_NAME = 'pulsecheck_patient_session';
+const PATIENT_SESSION_TIMEOUT_MS = 60 * 60 * 1000;
 
 /** Each tab starts as a patient and can switch to a staff demo role. */
 let currentRole = USER_ROLES.PATIENT;
@@ -537,22 +540,144 @@ function createTicketNumber() {
 
 /* ---------------------------------------------------------------------------
  * "WHO AM I?" - the patient shown on the My Status view
- * Since there's no real login, we just remember which patient id the
- * My Status view should show.
+ * The patient selection acts as a demo session. Its cookie expires after one
+ * hour without activity. The localStorage copy keeps the demo working when
+ * the page is opened directly from a file:// URL that blocks cookies.
  * ------------------------------------------------------------------------- */
 
-/** @returns {string|null} The id of the patient My Status is showing. */
-function getCurrentPatientId() {
-  return localStorage.getItem(STORAGE_KEYS.CURRENT_PATIENT_ID);
+/**
+ * Reads a valid session from the cookie, if the browser still has one.
+ *
+ * @returns {Object|null} The patient id and expiry time, or null if invalid.
+ */
+function readPatientSessionCookie() {
+  const cookiePrefix = `${PATIENT_SESSION_COOKIE_NAME}=`;
+  const cookie = document.cookie.split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(cookiePrefix));
+  if (!cookie) return null;
+
+  const encodedSession = cookie.slice(cookiePrefix.length);
+  const separatorIndex = encodedSession.lastIndexOf('|');
+  if (separatorIndex < 1) {
+    clearPatientSessionCookie();
+    return null;
+  }
+
+  let patientId;
+  try {
+    patientId = decodeURIComponent(encodedSession.slice(0, separatorIndex));
+  } catch (error) {
+    console.error('The saved patient session cookie was unreadable.', error);
+    clearPatientSessionCookie();
+    return null;
+  }
+
+  const expiresAt = Number(encodedSession.slice(separatorIndex + 1));
+  if (!patientId || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    clearPatientSessionCookie();
+    return null;
+  }
+
+  return { patientId, expiresAt };
 }
 
-/** @param {string|null} patientId - Pass null to "log out". */
+/**
+ * Removes the simulated patient-session cookie.
+ * @returns {void}
+ */
+function clearPatientSessionCookie() {
+  document.cookie = `${PATIENT_SESSION_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
+
+/**
+ * Finds the active patient session in the cookie or file:// fallback storage.
+ *
+ * @returns {Object|null} The patient id and expiry time, or null if expired.
+ */
+function getCurrentPatientSession() {
+  const cookieSession = readPatientSessionCookie();
+  if (cookieSession) return cookieSession;
+
+  const savedSession = localStorage.getItem(STORAGE_KEYS.CURRENT_PATIENT_SESSION);
+  if (!savedSession) return null;
+
+  let session;
+  try {
+    session = JSON.parse(savedSession);
+  } catch (error) {
+    console.error('The saved patient session was unreadable.', error);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PATIENT_SESSION);
+    return null;
+  }
+
+  if (
+    !session ||
+    typeof session.patientId !== 'string' ||
+    !session.patientId ||
+    !Number.isFinite(session.expiresAt) ||
+    session.expiresAt <= Date.now()
+  ) {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PATIENT_SESSION);
+    return null;
+  }
+
+  return session;
+}
+
+/**
+ * Saves or refreshes the demo session and its one-hour inactivity expiry.
+ *
+ * @param {string} patientId - The patient represented by the session.
+ * @returns {void}
+ */
+function saveCurrentPatientSession(patientId) {
+  const expiresAt = Date.now() + PATIENT_SESSION_TIMEOUT_MS;
+  const cookieValue = `${encodeURIComponent(patientId)}|${expiresAt}`;
+
+  document.cookie = `${PATIENT_SESSION_COOKIE_NAME}=${cookieValue}; Max-Age=3600; Path=/; SameSite=Lax`;
+  localStorage.setItem(STORAGE_KEYS.CURRENT_PATIENT_SESSION, JSON.stringify({ patientId, expiresAt }));
+  // Remove the old non-expiring selection so it cannot restore an expired session.
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_PATIENT_ID);
+}
+
+/**
+ * Returns the patient id for an active session, if one exists.
+ *
+ * @returns {string|null} The id of the patient My Status is showing.
+ */
+function getCurrentPatientId() {
+  const session = getCurrentPatientSession();
+  return session ? session.patientId : null;
+}
+
+/**
+ * Starts a patient session or logs the patient out when passed null.
+ *
+ * @param {string|null} patientId - Pass null to "log out".
+ * @returns {void}
+ */
 function setCurrentPatientId(patientId) {
   if (patientId) {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_PATIENT_ID, patientId);
+    saveCurrentPatientSession(patientId);
   } else {
+    clearPatientSessionCookie();
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PATIENT_SESSION);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_PATIENT_ID);
   }
+}
+
+/**
+ * Extends an active patient session after user activity.
+ *
+ * @returns {boolean} True if a live session was refreshed.
+ */
+function refreshCurrentPatientSession() {
+  const session = getCurrentPatientSession();
+  if (!session) return false;
+
+  saveCurrentPatientSession(session.patientId);
+  return true;
 }
 
 /* ---------------------------------------------------------------------------
@@ -842,6 +967,7 @@ function addSmsMessage(details) {
 /** Wipes every piece of PulseCheck data from this browser. */
 function clearAllData() {
   Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  clearPatientSessionCookie();
 }
 
 /* ---- LOW-VISION DISPLAY PREFERENCE ---- */
