@@ -49,11 +49,11 @@
 const STORAGE_KEYS = {
   PATIENTS: 'pulsecheck_patients',                 // the list of all patient records
   CURRENT_PATIENT_ID: 'pulsecheck_current_patient', // which patient "My Status" is showing
-  CURRENT_VIEW: 'pulsecheck_current_view',          // which view was open last time
+  CURRENT_VIEW: 'pulsecheck_current_view',          // old saved view, removed on reset
   SURVEYS: 'pulsecheck_surveys',                   // post-visit survey responses
   LOW_VISION: 'pulsecheck_low_vision',             // larger text and stronger contrast
   THEME: 'pulsecheck_theme',                       // user theme choice: "light" or "dark"
-  CURRENT_ROLE: 'pulsecheck_current_role',          // current user role
+  CURRENT_ROLE: 'pulsecheck_current_role',          // old saved role, removed on reset
   ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
   DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts', // patient ids that closed their "It's your turn" alert
   SMS_MESSAGES: 'pulsecheck_sms_messages',         // pretend text messages "sent" to patients (js/sms-alerts.js)
@@ -116,6 +116,9 @@ const USER_ROLES = {
   FRONT_DESK: 'front_desk', // Front Desk Staff
   PATIENT: 'patient'        // Patient
 };
+
+/** Each tab starts as a patient and can switch to a staff demo role. */
+let currentRole = USER_ROLES.PATIENT;
 
 /**
  * Human-readable role names for display in the UI.
@@ -553,20 +556,6 @@ function setCurrentPatientId(patientId) {
 }
 
 /* ---------------------------------------------------------------------------
- * WHICH VIEW WAS OPEN - so a page refresh keeps you where you were.
- * ------------------------------------------------------------------------- */
-
-/** @returns {string|null} The name of the last open view, e.g. "admin". */
-function getSavedViewName() {
-  return localStorage.getItem(STORAGE_KEYS.CURRENT_VIEW);
-}
-
-/** @param {string} viewName */
-function saveViewName(viewName) {
-  localStorage.setItem(STORAGE_KEYS.CURRENT_VIEW, viewName);
-}
-
-/* ---------------------------------------------------------------------------
  * THEME PREFERENCE - light mode vs dark mode
  * ------------------------------------------------------------------------- */
 
@@ -632,27 +621,23 @@ function addSurvey(details) {
  * ------------------------------------------------------------------------- */
 
 /**
- * Gets the current active role from localStorage.
- * Defaults to Clinic Administration ('admin') so initial load has full access.
+ * Gets the active demo role for this tab. Patient and staff tabs can stay open
+ * at the same time while sharing queue data.
  *
  * @returns {string} The active role string.
  */
 function getCurrentRole() {
-  const savedRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
-  if (savedRole && Object.values(USER_ROLES).includes(savedRole)) {
-    return savedRole;
-  }
-  return USER_ROLES.ADMIN;
+  return currentRole;
 }
 
 /**
- * Sets the active user role in localStorage.
+ * Sets and records a change to this tab's active demo role.
  *
  * @param {string} role - The role string from USER_ROLES.
  */
 function setCurrentRole(role) {
-  if (Object.values(USER_ROLES).includes(role)) {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, role);
+  if (role !== currentRole && Object.values(USER_ROLES).includes(role)) {
+    currentRole = role;
     recordAuditEvent({ action: 'permission change', resourceType: 'role', resourceId: role });
   }
 }

@@ -7,7 +7,7 @@
   no install, no build step.
 
   The page is split into "views". Only one view is visible at a time.
-  The buttons in the top bar switch between them (see js/app.js):
+  The top bar switches between views in the current area (see js/app.js):
 
     1. New Patient    (#view-new-patient)    - a patient checks in
     2. My Status      (#view-patient-status) - a checked-in patient sees
@@ -18,8 +18,8 @@
     5. Dashboard      (#view-dashboard)      - a live, read-only queue
                                                dashboard for front-desk staff
 
-  Because this is a single-user demo, one person can click between all three
-  views to act as the patient AND the staff member.
+  The app opens in the patient area. The link in the bottom-right corner
+  switches between the patient and staff areas for this single-user demo.
 
   RULES FOR EDITING THIS FILE (see AGENTS.md for the full list):
     - Keep each view inside its own <section class="view"> block.
@@ -80,7 +80,7 @@
         <span>My Status</span>
       </button>
 
-      <button type="button" class="view-tab" data-view="admin">
+      <button type="button" class="view-tab" data-view="admin" hidden>
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"></line>
           <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -96,7 +96,7 @@
         <span>Survey</span>
       </button>
 
-      <button type="button" class="view-tab" data-view="dashboard">
+      <button type="button" class="view-tab" data-view="dashboard" hidden>
         <!-- A screen with a heartbeat line on it. -->
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -108,14 +108,13 @@
       </button>
     </nav>
 
-    <!-- User Role Selector dropdown for Role-Based Access Control -->
-    <div class="role-selector-wrapper">
+    <!-- Staff can select a demo role after entering the staff area. -->
+    <div id="staff-role-selector" class="role-selector-wrapper" hidden>
       <label for="app-role-select" class="role-select-label">Role:</label>
       <select id="app-role-select" class="role-select" aria-label="Select user role">
         <option value="admin">Clinic Administration</option>
         <option value="provider">Provider</option>
         <option value="front_desk">Front Desk Staff</option>
-        <option value="patient">Patient</option>
       </select>
     </div>
 
@@ -147,6 +146,7 @@
   </header>
 
   <main>
+    <p id="no-available-view" role="status" tabindex="-1" hidden>No views are available for this role.</p>
 
     <!-- =================================================================
          VIEW 1: NEW PATIENT
@@ -821,6 +821,12 @@
     <p class="slogan">Check-In • See Your Wait • Feel In Control</p>
     <p class="footer-note">PulseCheck demo - all data is saved only in this browser.</p>
   </footer>
+
+  <!-- Each link opens the other area in this tab or in a new tab. -->
+  <nav class="area-switcher" aria-label="Switch between patient and staff views">
+    <a id="staff-view-link" href="#view-admin">Staff View</a>
+    <a id="patient-view-link" href="#view-new-patient" hidden>Patient View</a>
+  </nav>
 
   <!-- ===================================================================
        SCRIPTS - the ORDER MATTERS. Later files use things defined in

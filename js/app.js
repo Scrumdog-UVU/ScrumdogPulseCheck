@@ -31,14 +31,18 @@ const VIEWS = {
 /** The view shown the very first time someone opens the app. */
 const DEFAULT_VIEW = 'new-patient';
 
+/** Views and URL fragment used to enter the staff area. */
+const STAFF_VIEWS = ['admin', 'dashboard'];
+const STAFF_VIEW_HASH = '#view-admin';
+
 /** The name of the view currently on screen. */
-let currentViewName = DEFAULT_VIEW;
+let currentViewName;
 
 /* ---------------------------------------------------------------------------
  * START-UP - runs once, as soon as the page has loaded.
  * ------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-  // 0. Initialize theme (Light Mode / Dark Mode) preference and Role Selector.
+  // 0. Initialize the display preferences and the staff role selector.
   initTheme();
   initLowVisionMode();
   initRoleSelector();
@@ -60,20 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('storage', () => {
     applyLowVisionMode(getSavedLowVisionMode());
     updateNavigationForRole();
-    if (VIEWS[currentViewName]) {
-      VIEWS[currentViewName].render();
-    }
+    refreshCurrentView();
   });
 
   // 4. Automatically refresh the current view every 30 seconds so wait-time
   //    estimates and queue positions stay up to date as time passes.
   setInterval(() => {
-    VIEWS[currentViewName].render();
+    VIEWS[currentViewName]?.render();
   }, 30000);
 
-  // 5. Open the view that was open last time (or the default one).
-  const savedView = getSavedViewName();
-  showView(VIEWS[savedView] ? savedView : DEFAULT_VIEW);
+  // 5. Start in the patient area unless the Staff View link was followed.
+  window.addEventListener('hashchange', openAreaFromUrl);
+  openAreaFromUrl();
 });
 
 /* ---------------------------------------------------------------------------
@@ -93,70 +95,65 @@ const VIEW_PERMISSIONS = {
 };
 
 /**
- * Initializes the Role Selector dropdown in the top header.
+ * Connects the role selector in the staff header.
+ * @returns {void}
  */
 function initRoleSelector() {
   const roleSelect = document.getElementById('app-role-select');
-  if (!roleSelect) return;
-
-  const currentRole = getCurrentRole();
-  roleSelect.value = currentRole;
-
-  roleSelect.addEventListener('change', (event) => {
-    const newRole = event.target.value;
-    setCurrentRole(newRole);
+  roleSelect.addEventListener('change', () => {
+    setCurrentRole(roleSelect.value);
     updateNavigationForRole();
-
-    // Check if current view is allowed under new role; if not, navigate to an accessible view
-    if (!isViewAllowed(currentViewName)) {
-      const allowedView = getFirstAllowedView();
-      showView(allowedView);
-    } else {
-      VIEWS[currentViewName].render();
-    }
+    refreshCurrentView();
   });
-
-  updateNavigationForRole();
 }
 
 /**
- * Checks if a view is allowed under current role permissions.
+ * Opens the area named by the link. The URL lets each tab choose its own area.
+ * @returns {void}
+ */
+function openAreaFromUrl() {
+  const opensStaff = window.location.hash === STAFF_VIEW_HASH;
+  const staffRole = document.getElementById('app-role-select').value;
+  setCurrentRole(opensStaff ? staffRole : USER_ROLES.PATIENT);
+  updateNavigationForRole();
+  showView(opensStaff ? 'admin' : DEFAULT_VIEW);
+}
+
+/**
+ * Redraws the active view or switches if this role can no longer open it.
+ * @returns {void}
+ */
+function refreshCurrentView() {
+  if (currentViewName && isViewAllowed(currentViewName)) {
+    VIEWS[currentViewName].render();
+    return;
+  }
+  showView(currentViewName || DEFAULT_VIEW);
+}
+
+/**
+ * Checks whether a view belongs to this area and is allowed for the role.
  *
  * @param {string} viewName - The key of the view, e.g. "admin".
  * @returns {boolean} True if allowed.
  */
 function isViewAllowed(viewName) {
-  const requiredPermission = VIEW_PERMISSIONS[viewName];
-  if (!requiredPermission) return true;
-  return hasPermission(requiredPermission);
+  const isStaff = getCurrentRole() !== USER_ROLES.PATIENT;
+  return STAFF_VIEWS.includes(viewName) === isStaff && hasPermission(VIEW_PERMISSIONS[viewName]);
 }
 
 /**
- * Finds the first view key that the current role has permission to access.
- *
- * @returns {string} The first allowed view key, or DEFAULT_VIEW as fallback.
- */
-function getFirstAllowedView() {
-  const views = Object.keys(VIEWS);
-  for (const viewKey of views) {
-    if (isViewAllowed(viewKey)) return viewKey;
-  }
-  return DEFAULT_VIEW;
-}
-
-/**
- * Updates top bar view switcher tab visibility based on active role permissions.
+ * Updates the header and corner links for the current patient or staff area.
+ * @returns {void}
  */
 function updateNavigationForRole() {
-  const roleSelect = document.getElementById('app-role-select');
-  if (roleSelect) {
-    roleSelect.value = getCurrentRole();
-  }
+  const isStaff = getCurrentRole() !== USER_ROLES.PATIENT;
+  document.getElementById('staff-role-selector').hidden = !isStaff;
+  document.getElementById('staff-view-link').hidden = isStaff;
+  document.getElementById('patient-view-link').hidden = !isStaff;
 
   document.querySelectorAll('.view-tab').forEach((tab) => {
-    const viewKey = tab.dataset.view;
-    const allowed = isViewAllowed(viewKey);
-    tab.hidden = !allowed;
+    tab.hidden = !isViewAllowed(tab.dataset.view);
   });
 }
 
@@ -224,13 +221,14 @@ function showView(viewName) {
     return;
   }
 
-  // Ensure role permissions allow viewing this view.
+  // If this role cannot open the requested view, try another in the same area.
   if (!isViewAllowed(viewName)) {
-    viewName = getFirstAllowedView();
+    viewName = Object.keys(VIEWS).find(isViewAllowed);
   }
 
   currentViewName = viewName;
-  saveViewName(viewName);
+  const noAvailableView = document.getElementById('no-available-view');
+  noAvailableView.hidden = Boolean(viewName);
 
   // Record a view-level access when patient details are opened in this demo.
   // Patient IDs are used as references; patient health details are never copied
@@ -255,11 +253,11 @@ function showView(viewName) {
   });
 
   // Draw the view with the latest saved data.
-  VIEWS[viewName].render();
+  VIEWS[viewName]?.render();
   window.scrollTo(0, 0);
 
   // Shift focus to the active view title heading so screen reader users are announced of the view change.
-  const activeTitle = document.querySelector(`#view-${viewName} .view-title`);
+  const activeTitle = viewName ? document.querySelector(`#view-${viewName} .view-title`) : noAvailableView;
   if (activeTitle) {
     activeTitle.focus();
   }

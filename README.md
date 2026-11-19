@@ -9,7 +9,9 @@ Double-click `index.html`. That's it. There's nothing to install.
 
 ## How to use it
 
-Use the buttons in the top bar to switch roles:
+PulseCheck opens in **Patient View**. Use the top bar for patient tasks.
+Select **Staff View** in the bottom-right corner to manage the queue. The
+corner link then reads **Patient View** and takes you back to check-in.
 
 1. **New Patient**: fill in the form to check in. You'll be taken to My Status.
 2. **My Status**: see your ticket, place in line, and estimated wait. Use the
