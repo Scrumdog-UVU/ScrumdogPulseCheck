@@ -160,6 +160,7 @@ function handleAdminAction(action, patientId) {
     updatePatient(patientId, {
       status: PATIENT_STATUS.CALLED,
       careStage: 'in-triage',
+      careStageEnteredAt: now,
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now
     });
 
@@ -168,6 +169,7 @@ function handleAdminAction(action, patientId) {
     updatePatient(patientId, {
       status: PATIENT_STATUS.DONE,
       careStage: 'discharged',
+      careStageEnteredAt: now,
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now,
       completedAt: now
     });
