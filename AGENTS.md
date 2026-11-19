@@ -212,3 +212,7 @@ in your PR description.
    Status updates.
 4. In your PR description, list which files you changed and why, and flag any
    change to a shared file or to the data model.
+
+### Care Board stage timing
+
+`careStageEnteredAt` is a Unix millisecond timestamp set at check-in and reset whenever a patient changes Kanban stages. Older demo records use check-in/called/completed timestamps as best-effort fallback. Stage-duration indicators are operational reminders only, not clinical triage or acuity scores. Demo thresholds are defined in `js/views/staff-kanban.js`.
