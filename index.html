@@ -756,6 +756,15 @@
       </div>
       <div id="admin-kanban-board" class="kanban-board" aria-label="Patient care stages"></div>
       <p class="kanban-demo-note">Classroom demo only. Data is stored in this browser, not shared between staff computers.</p>
+      <div id="kanban-record-backdrop" class="kanban-record-backdrop" hidden>
+        <section class="kanban-record-dialog" role="dialog" aria-modal="true" aria-labelledby="kanban-record-title" tabindex="-1">
+          <div class="kanban-record-header">
+            <h2 id="kanban-record-title">Patient Record</h2>
+            <button id="kanban-record-close" type="button" class="btn btn-secondary btn-small" aria-label="Close patient record">Close ✕</button>
+          </div>
+          <div id="kanban-record-details"></div>
+        </section>
+      </div>
     </section>
 
     <!-- =================================================================
