@@ -90,6 +90,10 @@
         <span>Staff View</span>
       </button>
 
+      <button type="button" class="view-tab" data-view="staff-kanban" hidden>
+        <span>Care Board</span>
+      </button>
+
       <button type="button" class="view-tab" data-view="survey">
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -439,13 +443,6 @@
         </div>
       </div>
 
-      <!-- Interactive care stages for staff; js/views/staff-kanban.js and css/staff-kanban.css. -->
-      <section class="card admin-kanban-card" aria-labelledby="admin-kanban-heading">
-        <h2 id="admin-kanban-heading">Patient Care Board</h2>
-        <p class="queue-hint">Drag a patient card to another stage, or use its Move to dropdown. Demo data stays in this browser.</p>
-        <div id="admin-kanban-board" class="kanban-board" aria-label="Patient care stages"></div>
-      </section>
-
       <!-- Patient Search Bar & Merge Trigger -->
       <div class="card admin-search-card">
         <div class="admin-search-header">
@@ -730,6 +727,28 @@
         <h2 class="surveys-list-title">Recent Feedback</h2>
         <div id="surveys-list-container"></div>
       </div>
+    </section>
+
+    <!-- =================================================================
+         STAFF KANBAN: a dedicated staff-only view.
+         Logic: js/views/staff-kanban.js
+         Styles: css/staff-kanban.css
+         ================================================================= -->
+    <section id="view-staff-kanban" class="view kanban-page" hidden>
+      <div class="kanban-page-heading">
+        <div>
+          <h1 class="view-title" tabindex="-1">Patient Care Board</h1>
+          <p class="view-subtitle">Move patient cards between stages using drag-and-drop or the dropdown.</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-small" data-go-to-view="admin">Back to Staff Queue</button>
+      </div>
+      <div class="kanban-page-toolbar">
+        <label for="kanban-search-input">Find patient</label>
+        <input id="kanban-search-input" type="search" placeholder="Search by name or phone" autocomplete="off">
+        <span id="kanban-patient-count" aria-live="polite"></span>
+      </div>
+      <div id="admin-kanban-board" class="kanban-board" aria-label="Patient care stages"></div>
+      <p class="kanban-demo-note">Classroom demo only. Data is stored in this browser, not shared between staff computers.</p>
     </section>
 
     <!-- =================================================================
