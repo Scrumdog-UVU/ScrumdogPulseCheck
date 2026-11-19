@@ -173,6 +173,12 @@ body {
   box-shadow: none;
 }
 
+/* Give the open role menu its own theme colors, including before a selection. */
+.role-select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
 /* The three view buttons, styled as a joined "pill" of tabs. */
 .view-switcher {
   display: flex;
