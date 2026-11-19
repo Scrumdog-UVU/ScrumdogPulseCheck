@@ -32,6 +32,7 @@ const ADMIN_ACTIONS = {
  * Connects the buttons for this view. Called once by js/app.js.
  */
 function initAdminView() {
+  initKanbanBoard();
   // The patient rows are re-created every time the view redraws, so instead
   // of attaching a click handler to every single row button, we attach ONE
   // handler to the whole view and check which button was clicked.
@@ -159,6 +160,7 @@ function handleAdminAction(action, patientId) {
     const existing = getPatientById(patientId);
     updatePatient(patientId, {
       status: PATIENT_STATUS.CALLED,
+      careStage: 'in-triage',
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now
     });
 
@@ -166,6 +168,7 @@ function handleAdminAction(action, patientId) {
     const existing = getPatientById(patientId);
     updatePatient(patientId, {
       status: PATIENT_STATUS.DONE,
+      careStage: 'discharged',
       calledAt: (existing && existing.calledAt) ? existing.calledAt : now,
       completedAt: now
     });
@@ -250,6 +253,9 @@ function renderAdminView() {
 
   // --- Role Permissions Management Matrix Card -------------------------
   renderPermissionsCard();
+
+  // --- Interactive patient care board ----------------------------------
+  renderKanbanBoard();
 
   // --- The two queues --------------------------------------------------
   const appointmentQueueItems = getQueue(VISIT_TYPE.APPOINTMENT).map((patient, index) => ({

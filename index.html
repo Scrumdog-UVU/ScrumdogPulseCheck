@@ -47,6 +47,7 @@
   <link rel="stylesheet" href="css/survey.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/accepted-insurance.css">
+  <link rel="stylesheet" href="css/staff-kanban.css">
 </head>
 <body>
 
@@ -437,6 +438,13 @@
           <span class="summary-label">No-Shows</span>
         </div>
       </div>
+
+      <!-- Interactive care stages for staff; js/views/staff-kanban.js and css/staff-kanban.css. -->
+      <section class="card admin-kanban-card" aria-labelledby="admin-kanban-heading">
+        <h2 id="admin-kanban-heading">Patient Care Board</h2>
+        <p class="queue-hint">Drag a patient card to another stage, or use its Move to dropdown. Demo data stays in this browser.</p>
+        <div id="admin-kanban-board" class="kanban-board" aria-label="Patient care stages"></div>
+      </section>
 
       <!-- Patient Search Bar & Merge Trigger -->
       <div class="card admin-search-card">
@@ -862,6 +870,7 @@
   <script src="js/sms-alerts.js"></script>
   <script src="js/views/new-patient.js"></script>
   <script src="js/views/patient-status.js"></script>
+  <script src="js/views/staff-kanban.js"></script>
   <script src="js/views/admin.js"></script>
   <script src="js/views/survey.js"></script>
   <script src="js/views/dashboard.js"></script>

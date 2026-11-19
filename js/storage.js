@@ -32,6 +32,7 @@
  *     checkedInAt:     1695400000000          // Date.now() when they checked in
  *     calledAt:        1695400600000 or null  // Date.now() when called to desk
  *     completedAt:     1695401800000 or null  // Date.now() when visit marked complete
+ *     careStage:       "waiting-triage"       // staff Kanban stage (older records may omit it)
  *     status:          "waiting"              // one of PATIENT_STATUS below
  *   }
  */
@@ -282,7 +283,8 @@ function addPatient(details) {
     checkedInAt: now,
     calledAt: null,
     completedAt: null,
-    status: PATIENT_STATUS.WAITING
+    status: PATIENT_STATUS.WAITING,
+    careStage: 'waiting-triage'
   };
 
   const patients = getAllPatients();

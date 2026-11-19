@@ -165,6 +165,7 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `checkedInAt` | `1695400000000` | `Date.now()` at check-in. |
 | `calledAt` | `1695400600000` or `null` | `Date.now()` when staff called the patient in. |
 | `completedAt` | `1695401800000` or `null` | `Date.now()` when visit marked done. |
+| `careStage` | `"waiting-triage"` | Staff Kanban stage; older records fall back from status. |
 | `status` | `"waiting"` | `PATIENT_STATUS.WAITING` → `CALLED` → `DONE` or `NO_SHOW`. |
 
 Queue rules (in `js/queue.js`):
