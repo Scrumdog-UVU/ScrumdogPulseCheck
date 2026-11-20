@@ -5,8 +5,8 @@
  * HTML for this view: <section id="view-admin"> in index.html
  * Styles for this view: css/admin.css
  *
- * Staff see both queues (Scheduled Appointments and Walk-ins) and move each
- * patient along:
+ * Staff can enter check-ins for patients who call ahead, see both queues
+ * (Scheduled Appointments and Walk-ins), and move each patient along:
  *
  *     WAITING  --[Call In]-->  CALLED  --[Mark Done]-->  DONE
  *
@@ -32,6 +32,14 @@ const ADMIN_ACTIONS = {
  * Connects the buttons for this view. Called once by js/app.js.
  */
 function initAdminView() {
+  const manualCheckInForm = document.getElementById('admin-manual-checkin-form');
+  manualCheckInForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    handleManualCheckIn();
+  });
+  document.getElementById('admin-manual-visit-type').addEventListener('change', updateManualAppointmentTimeRow);
+  updateManualAppointmentTimeRow();
+
   // The patient rows are re-created every time the view redraws, so instead
   // of attaching a click handler to every single row button, we attach ONE
   // handler to the whole view and check which button was clicked.
@@ -203,6 +211,56 @@ function handleAdminAction(action, patientId) {
 }
 
 /**
+ * Saves a patient check-in entered by front-desk staff on a phone call.
+ *
+ * @returns {void}
+ */
+function handleManualCheckIn() {
+  const status = document.getElementById('admin-manual-checkin-status');
+  if (!hasPermission('canManageQueue')) {
+    alert('Your active role does not have permission to modify the patient queue.');
+    return;
+  }
+
+  const details = {
+    name: document.getElementById('admin-manual-name').value.trim(),
+    dob: document.getElementById('admin-manual-dob').value,
+    phone: document.getElementById('admin-manual-phone').value.trim(),
+    reason: document.getElementById('admin-manual-reason').value,
+    allergies: document.getElementById('admin-manual-allergies').value.trim(),
+    visitType: document.getElementById('admin-manual-visit-type').value,
+    appointmentTime: document.getElementById('admin-manual-appointment-time').value,
+    smsConsent: false,
+    pushConsent: false
+  };
+
+  if (!details.name || !details.dob || !details.phone || !details.reason) {
+    status.textContent = 'Enter the patient name, date of birth, phone number, and reason for visit.';
+    return;
+  }
+
+  const newPatient = addPatient(details);
+  document.getElementById('admin-manual-checkin-form').reset();
+  updateManualAppointmentTimeRow();
+  renderAdminView();
+  status.textContent = `Patient checked in with ticket ${newPatient.ticketNumber}.`;
+}
+
+/**
+ * Shows and requires the appointment time only for a scheduled appointment.
+ *
+ * @returns {void}
+ */
+function updateManualAppointmentTimeRow() {
+  const hasAppointment = document.getElementById('admin-manual-visit-type').value === VISIT_TYPE.APPOINTMENT;
+  const timeRow = document.getElementById('admin-manual-appointment-time-row');
+  const timeInput = document.getElementById('admin-manual-appointment-time');
+  timeRow.hidden = !hasAppointment;
+  timeInput.required = hasAppointment;
+  if (!hasAppointment) timeInput.value = '';
+}
+
+/**
  * Redraws this view from saved data. Called by js/app.js whenever the view
  * is shown or the data changes.
  */
@@ -236,6 +294,7 @@ function renderAdminView() {
   const resetBtn = document.getElementById('admin-reset-btn');
   if (clearFinishedBtn) clearFinishedBtn.hidden = !canReset;
   if (resetBtn) resetBtn.hidden = !canReset;
+  document.getElementById('admin-manual-checkin-card').hidden = !hasPermission('canManageQueue');
   const auditCard = document.getElementById('admin-audit-card');
   if (auditCard) auditCard.hidden = !hasPermission('canManageRoles');
 

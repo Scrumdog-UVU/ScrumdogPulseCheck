@@ -14,6 +14,22 @@ Select **Staff View** in the bottom-right corner to manage the queue. The
 corner link then reads **Patient View** and takes you back to check-in.
 
 1. **New Patient**: fill in the form to check in. You'll be taken to My Status.
+   At a kiosk, select **Scan QR Code** to fill the form from a clinic-issued QR
+   code, then review the details and submit it yourself. In this demo, QR codes
+   contain JSON with `name`, `dob` (`YYYY-MM-DD`), `phone`, and `reason` matching
+   a check-in option. They may also include `visitType` (`walk-in` or
+   `appointment`), `appointmentTime` (`HH:MM` for appointments), and `allergies`.
+   Camera permission and a browser with built-in QR scanning support are
+   required; the regular form remains available if either is unavailable.
+   For example:
+
+   ```json
+   {"name":"Jane Doe","dob":"1990-05-15","phone":"555-123-4567","reason":"Routine Checkup"}
+   ```
+
+   The QR data is readable text, and this browser-only demo is not for real
+   patient information. The patient must agree to the privacy summary and make
+   their own optional message-consent choices after scanning.
 2. **My Status**: see your ticket, place in line, and estimated wait. Use the
    "Viewing as patient" drop-down to switch between checked-in patients.
    If the patient ticked the notifications box when checking in, a pretend
@@ -22,7 +38,10 @@ corner link then reads **Patient View** and takes you back to check-in.
    texts the clinic sent them: "Your turn is coming up!" once 2 or fewer
    people are ahead of them, and "It's your turn!" when they're called in.
 3. **Staff View**: see the Scheduled Appointments and Walk-ins queues.
-   **Call In** a patient, then **Mark Done** when their visit is over.
+   Use **Check In a Patient by Phone** to enter details for a patient who calls
+   ahead; they are added to the appropriate waiting queue with message
+   notifications off. **Call In** a patient, then **Mark Done** when their
+   visit is over.
 4. **Dashboard**: a live, read-only overview for front-desk staff. It shows
    who has been called in, both queues in order, and how long each patient
    has been waiting. Open it in a second browser tab and it updates the

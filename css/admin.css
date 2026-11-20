@@ -130,6 +130,35 @@
   color: var(--text-secondary);
 }
 
+/* Manual intake form used by front-desk staff for phone check-ins. */
+.admin-manual-checkin-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-manual-checkin-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-manual-checkin-form > button {
+  justify-self: start;
+}
+
+.admin-manual-checkin-status {
+  min-height: 1.25rem;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .admin-manual-checkin-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------------------------------------------------------------------------
  * PATIENT SEARCH BAR
  * ------------------------------------------------------------------------- */

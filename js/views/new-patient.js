@@ -6,7 +6,7 @@
  * Styles for this view: css/new-patient.css
  *
  * What happens here:
- *   1. The patient fills in the form.
+ *   1. The patient fills in the form or scans a QR code to prefill it.
  *   2. We save them as a new patient (addPatient in js/storage.js).
  *   3. We "log them in" (setCurrentPatientId) and switch to My Status
  *      so they immediately see their place in line.
@@ -23,6 +23,22 @@
 function initNewPatientView() {
   const form = document.getElementById('checkin-form');
   const visitTypeSelect = document.getElementById('visit-type');
+
+  document.getElementById('qr-scan-start-btn').addEventListener('click', startQrScanner);
+  document.getElementById('qr-scan-stop-btn').addEventListener('click', () => {
+    stopQrScanner('Scanner stopped.');
+  });
+
+  // Stop the camera if the patient leaves the check-in screen or switches tabs.
+  document.addEventListener('click', (event) => {
+    const navigationButton = event.target.closest('[data-view], [data-go-to-view]');
+    if (navigationButton && (navigationButton.dataset.view || navigationButton.dataset.goToView) !== 'new-patient') {
+      stopQrScanner();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopQrScanner();
+  });
 
   // Show or hide the "Appointment Time" box when the patient changes
   // their answer to "Do you have a scheduled appointment?"
@@ -65,6 +81,7 @@ function renderNewPatientView() {
  */
 function handleCheckIn() {
   const form = document.getElementById('checkin-form');
+  stopQrScanner();
 
   // Gather what was typed. .trim() removes extra spaces at the start/end.
   const details = {
@@ -95,6 +112,202 @@ function handleCheckIn() {
   // Take them straight to their status page. (showView is in js/app.js.)
   showView('patient-status');
 }
+
+/**
+ * Opens the device camera and looks for a QR code with check-in details.
+ *
+ * @returns {Promise<void>}
+ */
+async function startQrScanner() {
+  const status = document.getElementById('qr-scan-status');
+  const video = document.getElementById('qr-scan-video');
+
+  if (typeof BarcodeDetector === 'undefined') {
+    status.textContent = 'QR scanning is not supported in this browser. You can still use the check-in form below.';
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = 'Camera access is not available. You can still use the check-in form below.';
+    return;
+  }
+
+  const startButton = document.getElementById('qr-scan-start-btn');
+  startButton.disabled = true;
+  qrCameraScanning = true;
+  try {
+    qrCameraDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    const cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false
+    });
+
+    // A navigation click can stop scanning while the browser asks for permission.
+    if (!qrCameraScanning) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    qrCameraStream = cameraStream;
+    video.srcObject = qrCameraStream;
+    await video.play();
+    if (!qrCameraScanning) return;
+    video.hidden = false;
+    startButton.hidden = true;
+    document.getElementById('qr-scan-stop-btn').hidden = false;
+    status.textContent = 'Point the camera at your clinic check-in QR code.';
+    scanQrCameraFrame();
+  } catch (error) {
+    console.error('The QR scanner could not start.', error);
+    stopQrScanner();
+    status.textContent = 'The camera could not start. Check camera permission and try again, or use the form below.';
+  }
+}
+
+/**
+ * Checks one camera frame for a QR code, then schedules the next frame.
+ *
+ * @returns {Promise<void>}
+ */
+async function scanQrCameraFrame() {
+  if (!qrCameraScanning) return;
+
+  const video = document.getElementById('qr-scan-video');
+  try {
+    if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      const codes = await qrCameraDetector.detect(video);
+      if (!qrCameraScanning) return;
+      const qrCode = codes.find((code) => code.rawValue);
+      if (qrCode && applyQrCheckInData(qrCode.rawValue)) {
+        stopQrScanner();
+        document.getElementById('qr-scan-status').textContent =
+          'Details loaded. Review them, agree to the privacy summary, and check in below.';
+        return;
+      }
+    }
+  } catch (error) {
+    if (!qrCameraScanning) return;
+    console.error('The QR scanner could not read a camera frame.', error);
+    stopQrScanner();
+    document.getElementById('qr-scan-status').textContent =
+      'The camera could not read the QR code. Try again or use the form below.';
+    return;
+  }
+
+  qrCameraFrameId = requestAnimationFrame(scanQrCameraFrame);
+}
+
+/**
+ * Checks and copies the supported QR details into the patient form.
+ *
+ * @param {string} rawValue - Text read from the QR code.
+ * @returns {boolean} True if the QR code contains valid check-in details.
+ */
+function applyQrCheckInData(rawValue) {
+  const status = document.getElementById('qr-scan-status');
+  let details;
+
+  try {
+    details = JSON.parse(rawValue);
+  } catch (error) {
+    status.textContent = 'This QR code is not a supported check-in code. Keep scanning or use the form below.';
+    return false;
+  }
+
+  if (!details || typeof details !== 'object' || Array.isArray(details)) {
+    status.textContent = 'This QR code is not a supported check-in code. Keep scanning or use the form below.';
+    return false;
+  }
+
+  const name = typeof details.name === 'string' ? details.name.trim() : '';
+  const phone = typeof details.phone === 'string' ? details.phone.trim() : '';
+  const reason = typeof details.reason === 'string' ? details.reason : '';
+  const dobParts = typeof details.dob === 'string' ? details.dob.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+  const reasonExists = Array.from(document.getElementById('visit-reason').options)
+    .some((option) => option.value === reason);
+
+  if (!name || name.length > 50 || !phone || phone.length > 20 || !reasonExists || !dobParts) {
+    status.textContent = 'This QR code is missing valid check-in details. Keep scanning or use the form below.';
+    return false;
+  }
+
+  const year = Number(dobParts[1]);
+  const month = Number(dobParts[2]);
+  const day = Number(dobParts[3]);
+  const dob = new Date(year, month - 1, day);
+  const currentYear = new Date().getFullYear();
+  if (year < 1920 || year > currentYear ||
+      dob.getFullYear() !== year || dob.getMonth() !== month - 1 || dob.getDate() !== day) {
+    status.textContent = 'This QR code has an invalid date of birth. Keep scanning or use the form below.';
+    return false;
+  }
+
+  const visitType = details.visitType || VISIT_TYPE.WALK_IN;
+  const appointmentTime = typeof details.appointmentTime === 'string' ? details.appointmentTime : '';
+  const validAppointmentTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(appointmentTime);
+  if (visitType !== VISIT_TYPE.WALK_IN && visitType !== VISIT_TYPE.APPOINTMENT) {
+    status.textContent = 'This QR code has an invalid visit type. Keep scanning or use the form below.';
+    return false;
+  }
+  if (visitType === VISIT_TYPE.APPOINTMENT && !validAppointmentTime) {
+    status.textContent = 'This QR code is missing a valid appointment time. Keep scanning or use the form below.';
+    return false;
+  }
+
+  if (details.allergies !== undefined &&
+      (typeof details.allergies !== 'string' || details.allergies.length > 100)) {
+    status.textContent = 'This QR code has invalid allergy details. Keep scanning or use the form below.';
+    return false;
+  }
+
+  document.getElementById('patient-name').value = name;
+  document.getElementById('patient-phone').value = phone;
+  document.getElementById('visit-reason').value = reason;
+  document.getElementById('patient-allergies').value = details.allergies || '';
+  document.getElementById('visit-type').value = visitType;
+  setDobPickerDate(year, month, day);
+  updateAppointmentTimeRow();
+  document.getElementById('appointment-time').value =
+    visitType === VISIT_TYPE.APPOINTMENT ? appointmentTime : '';
+
+  // QR details must never carry consent forward from a previous kiosk visitor.
+  document.getElementById('patient-privacy-consent').checked = false;
+  document.getElementById('patient-sms-consent').checked = false;
+  document.getElementById('patient-push-consent').checked = false;
+  return true;
+}
+
+/**
+ * Stops the camera and returns the scanner controls to their starting state.
+ *
+ * @param {string} [message] - Optional status text for the patient.
+ * @returns {void}
+ */
+function stopQrScanner(message) {
+  qrCameraScanning = false;
+  if (qrCameraFrameId) cancelAnimationFrame(qrCameraFrameId);
+  qrCameraFrameId = null;
+
+  if (qrCameraStream) {
+    qrCameraStream.getTracks().forEach((track) => track.stop());
+    qrCameraStream = null;
+  }
+
+  const video = document.getElementById('qr-scan-video');
+  video.pause();
+  video.srcObject = null;
+  video.hidden = true;
+  const startButton = document.getElementById('qr-scan-start-btn');
+  startButton.hidden = false;
+  startButton.disabled = false;
+  document.getElementById('qr-scan-stop-btn').hidden = true;
+  qrCameraDetector = null;
+  if (message) document.getElementById('qr-scan-status').textContent = message;
+}
+
+let qrCameraStream = null;
+let qrCameraFrameId = null;
+let qrCameraDetector = null;
+let qrCameraScanning = false;
 
 /**
  * Shows the "Appointment Time" field only if the patient said they have an

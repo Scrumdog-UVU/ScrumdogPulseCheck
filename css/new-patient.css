@@ -12,6 +12,43 @@
   margin: 0 auto;
 }
 
+/* Camera controls for patients using a clinic-issued QR check-in code. */
+.qr-checkin-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+}
+
+.qr-checkin-title {
+  margin-bottom: 0.35rem;
+  font-size: 1.1rem;
+}
+
+.qr-checkin-panel p,
+.qr-scan-status {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.qr-scanner-controls {
+  margin-top: 0.75rem;
+}
+
+.qr-scan-video {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 0.75rem;
+  border-radius: var(--radius);
+  background-color: var(--card-bg);
+}
+
+.qr-scan-status {
+  min-height: 1.25rem;
+  margin-top: 0.5rem;
+}
+
 /* Stack the form rows with even spacing. */
 #checkin-form {
   display: flex;

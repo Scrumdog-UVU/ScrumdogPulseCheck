@@ -176,6 +176,17 @@
           Current estimated wait for walk-ins: <strong id="new-patient-wait-preview" aria-live="polite" role="status">-</strong>
         </p>
 
+        <div class="qr-checkin-panel">
+          <h2 class="qr-checkin-title">Check in with a QR code</h2>
+          <p>Scan your clinic-issued code to fill in this form. Review the details and choose your message settings before checking in.</p>
+          <div class="qr-scanner-controls">
+            <button type="button" id="qr-scan-start-btn" class="btn btn-secondary">Scan QR Code</button>
+            <button type="button" id="qr-scan-stop-btn" class="btn btn-secondary" hidden>Stop Camera</button>
+          </div>
+          <video id="qr-scan-video" class="qr-scan-video" autoplay muted playsinline hidden aria-label="Camera view for scanning a check-in QR code"></video>
+          <p id="qr-scan-status" class="qr-scan-status" role="status" aria-live="polite"></p>
+        </div>
+
         <form id="checkin-form">
           <div class="form-row">
             <label for="patient-name">Full Name</label>
@@ -448,6 +459,54 @@
           <span class="summary-number" id="admin-count-noshow">0</span>
           <span class="summary-label">No-Shows</span>
         </div>
+      </div>
+
+      <!-- Front-desk staff can record check-ins for patients who call ahead. -->
+      <div id="admin-manual-checkin-card" class="card admin-manual-checkin-card">
+        <h2 class="queue-title">Check In a Patient by Phone</h2>
+        <p class="queue-hint">Enter the details provided by a patient who called ahead. Message notifications stay off unless the patient checks in themselves and opts in.</p>
+        <form id="admin-manual-checkin-form" class="admin-manual-checkin-form">
+          <div class="form-row">
+            <label for="admin-manual-name">Full Name</label>
+            <input id="admin-manual-name" type="text" maxlength="50" required>
+          </div>
+          <div class="form-row">
+            <label for="admin-manual-dob">Date of Birth</label>
+            <input id="admin-manual-dob" type="date" required>
+          </div>
+          <div class="form-row">
+            <label for="admin-manual-phone">Phone Number</label>
+            <input id="admin-manual-phone" type="tel" maxlength="20" required>
+          </div>
+          <div class="form-row">
+            <label for="admin-manual-reason">Reason for Visit</label>
+            <select id="admin-manual-reason" required>
+              <option value="">Select a reason...</option>
+              <option value="General Consultation">General Consultation</option>
+              <option value="Urgent Care / Acute Illness">Urgent Care / Acute Illness</option>
+              <option value="Routine Checkup">Routine Checkup</option>
+              <option value="Follow-up Visit">Follow-up Visit</option>
+              <option value="Vaccination / Lab Work">Vaccination / Lab Work</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="admin-manual-allergies">Known / Flagged Allergies</label>
+            <input id="admin-manual-allergies" type="text" maxlength="100">
+          </div>
+          <div class="form-row">
+            <label for="admin-manual-visit-type">Visit Type</label>
+            <select id="admin-manual-visit-type" required>
+              <option value="walk-in">Walk-in</option>
+              <option value="appointment">Scheduled appointment</option>
+            </select>
+          </div>
+          <div class="form-row" id="admin-manual-appointment-time-row" hidden>
+            <label for="admin-manual-appointment-time">Appointment Time</label>
+            <input id="admin-manual-appointment-time" type="time">
+          </div>
+          <button type="submit" class="btn btn-primary">Add to Queue</button>
+        </form>
+        <p id="admin-manual-checkin-status" class="admin-manual-checkin-status" role="status" aria-live="polite"></p>
       </div>
 
       <!-- Patient Search Bar & Merge Trigger -->
