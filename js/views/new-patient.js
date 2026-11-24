@@ -88,6 +88,7 @@ function handleCheckIn() {
     name: document.getElementById('patient-name').value.trim(),
     dob: document.getElementById('patient-dob').value,
     phone: document.getElementById('patient-phone').value.trim(),
+    email: document.getElementById('patient-email').value.trim(),
     reason: document.getElementById('visit-reason').value,
     allergies: document.getElementById('patient-allergies').value.trim(),
     visitType: document.getElementById('visit-type').value,
@@ -98,7 +99,7 @@ function handleCheckIn() {
 
   // The browser already blocks empty "required" fields, but a name of only
   // spaces would get through, so double-check here.
-  if (!details.name || !details.dob || !details.phone || !details.reason) return;
+  if (!details.name || !details.dob || !details.phone || !details.email || !details.reason) return;
 
   // Save the patient and remember them as the "logged in" patient.
   const newPatient = addPatient(details);
