@@ -301,6 +301,7 @@ function renderAdminView() {
   // --- Duplicate Patient Detection Banner ------------------------------
   renderDuplicateAlert();
   renderAuditLog();
+  renderPatientMessageInbox();
 
   // --- Today's Key Metrics Dashboard -----------------------------------
   renderKeyMetrics(allPatients);
@@ -372,6 +373,37 @@ function renderAdminView() {
     filteredNoshow,
     noshowEmptyText
   );
+}
+
+/**
+ * Draws the newest patient-to-front-desk messages in the Staff View inbox.
+ *
+ * @returns {void} Updates the inbox count and message list.
+ */
+function renderPatientMessageInbox() {
+  const count = document.getElementById('admin-message-count');
+  const list = document.getElementById('admin-message-inbox-list');
+  if (!count || !list) return;
+
+  const messages = getAllPatientMessages().sort((firstMessage, secondMessage) =>
+    secondMessage.createdAt - firstMessage.createdAt
+  );
+  count.textContent = `${messages.length} message${messages.length === 1 ? '' : 's'}`;
+
+  if (messages.length === 0) {
+    list.innerHTML = '<p class="empty-msg">No patient messages yet.</p>';
+    return;
+  }
+
+  list.innerHTML = messages.map((message) => `
+    <article class="admin-message-item">
+      <div class="admin-message-meta">
+        <strong>${escapeHTML(message.patientName)} · ${escapeHTML(message.ticketNumber)}</strong>
+        <time>${escapeHTML(formatClockTime(message.createdAt))}</time>
+      </div>
+      <p>${escapeHTML(message.text)}</p>
+    </article>
+  `).join('');
 }
 
 /* ---------------------------------------------------------------------------

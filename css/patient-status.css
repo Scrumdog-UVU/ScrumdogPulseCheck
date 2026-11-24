@@ -357,6 +357,67 @@
   color: var(--text-secondary);
 }
 
+/* Patient messages stay together in their own front-desk conversation card. */
+.patient-message-card {
+  max-width: 600px;
+  margin: 1.5rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.patient-message-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.patient-message-note,
+.patient-message-feedback {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+#status-message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#status-message-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+#status-message-form button {
+  align-self: flex-start;
+}
+
+.patient-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.patient-message-item {
+  padding: 0.75rem 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--accent-color);
+  border-radius: 8px;
+}
+
+.patient-message-item p {
+  margin: 0 0 0.4rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.patient-message-item time {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
 /* The newest text "pops" in when it arrives. */
 .sms-bubble:last-child {
   animation: sms-bubble-pop 0.35s ease-out;

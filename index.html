@@ -481,6 +481,19 @@
           <!-- aria-live: screen readers read out new texts as they arrive. -->
           <ul id="status-sms-list" class="sms-thread" aria-live="polite"></ul>
         </div>
+
+        <!-- Messages are saved locally in this demo and shown to staff on the same device. -->
+        <section class="card patient-message-card" aria-labelledby="status-message-title">
+          <h2 id="status-message-title">Message Front Desk</h2>
+          <p class="patient-message-note">Demo only: your message is saved in this browser and appears in Staff View on this device. Do not use this for emergencies.</p>
+          <form id="status-message-form">
+            <label for="status-message-input">Your message</label>
+            <textarea id="status-message-input" maxlength="1000" rows="4" required placeholder="How can the front desk help?"></textarea>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+            <p id="status-message-feedback" class="patient-message-feedback" aria-live="polite" role="status"></p>
+          </form>
+          <div id="status-message-list" class="patient-message-list" aria-live="polite"></div>
+        </section>
       </div>
     </section>
 
@@ -561,6 +574,18 @@
         </form>
         <p id="admin-manual-checkin-status" class="admin-manual-checkin-status" role="status" aria-live="polite"></p>
       </div>
+
+      <!-- Patient messages are stored locally and appear here for front-desk staff. -->
+      <section class="card admin-message-inbox" aria-labelledby="admin-message-inbox-title">
+        <div class="admin-message-inbox-heading">
+          <div>
+            <h2 id="admin-message-inbox-title" class="queue-title">Patient Messages</h2>
+            <p class="queue-hint">Demo inbox: messages sent from My Status on this device.</p>
+          </div>
+          <span id="admin-message-count" class="analytics-badge" aria-live="polite">0 messages</span>
+        </div>
+        <div id="admin-message-inbox-list" class="admin-message-inbox-list" aria-live="polite"></div>
+      </section>
 
       <!-- Patient Search Bar & Merge Trigger -->
       <div class="card admin-search-card">
