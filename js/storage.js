@@ -58,6 +58,7 @@ const STORAGE_KEYS = {
   ROLE_PERMISSIONS: 'pulsecheck_role_permissions', // matrix of role-based permissions
   DISMISSED_TURN_ALERTS: 'pulsecheck_dismissed_turn_alerts', // patient ids that closed their "It's your turn" alert
   SMS_MESSAGES: 'pulsecheck_sms_messages',         // pretend text messages "sent" to patients (js/sms-alerts.js)
+  PATIENT_MESSAGES: 'pulsecheck_patient_messages', // messages patients send to front-desk staff in this demo
   AUDIT_EVENTS: 'pulsecheck_audit_events'          // simulated audit events for this browser demo
 };
 
@@ -519,6 +520,20 @@ function mergePatients(primaryPatientId, secondaryPatientId) {
   });
   localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(allSurveys));
 
+  // Keep patient-to-staff messages with the retained record after a merge.
+  const allPatientMessages = getAllPatientMessages().map((message) => {
+    if (message.patientId === secondaryPatientId) {
+      return {
+        ...message,
+        patientId: primaryPatientId,
+        patientName: updatedPrimary.name,
+        ticketNumber: updatedPrimary.ticketNumber
+      };
+    }
+    return message;
+  });
+  saveAllPatientMessages(allPatientMessages);
+
   // 12. If the current view was "viewing as" the secondary patient, switch to primary
   if (getCurrentPatientId() === secondaryPatientId) {
     setCurrentPatientId(primaryPatientId);
@@ -743,6 +758,70 @@ function addSurvey(details) {
   recordAuditEvent({ action: 'create', resourceType: 'survey', resourceId: newSurvey.patientId });
 
   return newSurvey;
+}
+
+/* ---------------------------------------------------------------------------
+ * PATIENT MESSAGES TO FRONT-DESK STAFF
+ * This demo saves messages in this browser so the patient and staff views can
+ * show them on the same device. A real app would send them to a secure service.
+ * Each message stores its patient ID, displayed name and ticket, message text,
+ * and sent time. The message text is never copied into the audit log.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Loads every patient message from browser storage in saved order.
+ *
+ * @returns {Array<Object>} Saved patient messages, or an empty list.
+ */
+function getAllPatientMessages() {
+  const savedText = localStorage.getItem(STORAGE_KEYS.PATIENT_MESSAGES);
+  if (!savedText) return [];
+
+  try {
+    const messages = JSON.parse(savedText);
+    return Array.isArray(messages) ? messages : [];
+  } catch (error) {
+    console.error('Saved patient messages were unreadable, starting fresh.', error);
+    return [];
+  }
+}
+
+/**
+ * Saves the full patient-message list, replacing what was there.
+ *
+ * @param {Array<Object>} messages - The complete list of saved messages.
+ * @returns {void} Saves the list in browser storage.
+ */
+function saveAllPatientMessages(messages) {
+  localStorage.setItem(STORAGE_KEYS.PATIENT_MESSAGES, JSON.stringify(messages));
+}
+
+/**
+ * Adds one message from a patient to the front-desk inbox.
+ *
+ * @param {Object} details - { patientId, patientName, ticketNumber, text }.
+ * @returns {Object|null} The saved message, or null when the patient or text is missing.
+ */
+function addPatientMessage(details) {
+  const messageText = String(details.text || '').trim();
+  if (!details.patientId || !messageText) return null;
+
+  const now = Date.now();
+
+  const message = {
+    id: `${now}-${Math.random().toString(36).slice(2, 6)}`,
+    patientId: details.patientId,
+    patientName: details.patientName,
+    ticketNumber: details.ticketNumber,
+    text: messageText,
+    createdAt: now
+  };
+
+  const messages = getAllPatientMessages();
+  messages.push(message);
+  saveAllPatientMessages(messages);
+  recordAuditEvent({ action: 'create', resourceType: 'patient-message', resourceId: message.patientId });
+  return message;
 }
 
 /* ---------------------------------------------------------------------------
