@@ -131,6 +131,19 @@ function fillTicket(patient) {
       ? `Appointment at ${formatAppointmentTime(patient.appointmentTime)}`
       : 'Walk-in';
 
+  // Show the confirmation email preview only when this record has an email address.
+  const emailConfirmation = document.getElementById('status-email-confirmation');
+  emailConfirmation.hidden = !patient.email;
+  if (patient.email) {
+    document.getElementById('status-email-to').textContent = patient.email;
+    document.getElementById('status-email-greeting').textContent = `Hello ${patient.name},`;
+    document.getElementById('status-email-ticket').textContent = `Your check-in is confirmed. Your ticket number is ${patient.ticketNumber}.`;
+    document.getElementById('status-email-visit').textContent = patient.visitType === VISIT_TYPE.APPOINTMENT
+      ? `Visit: ${patient.reason}. Appointment time: ${formatAppointmentTime(patient.appointmentTime)}.`
+      : `Visit: ${patient.reason}. You are checked in as a walk-in.`;
+    document.getElementById('status-email-time').textContent = `Checked in at ${formatClockTime(patient.checkedInAt)}.`;
+  }
+
   // Only waiting appointment patients can change their time from this screen.
   const rescheduleForm = document.getElementById('status-reschedule-form');
   const appointmentTimeInput = document.getElementById('status-new-appointment-time');
