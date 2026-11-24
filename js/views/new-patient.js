@@ -8,8 +8,8 @@
  * What happens here:
  *   1. The patient fills in the form or scans a QR code to prefill it.
  *   2. We save them as a new patient (addPatient in js/storage.js).
- *   3. We "log them in" (setCurrentPatientId) and switch to My Status
- *      so they immediately see their place in line.
+ *   3. We "log them in" (setCurrentPatientId) and show the check-in
+ *      confirmation with their ticket and a button to open My Status.
  *
  * Every view file has the same two functions (see AGENTS.md):
  *   initNewPatientView()   - runs ONCE when the page loads; connects buttons.
@@ -77,7 +77,7 @@ function renderNewPatientView() {
 }
 
 /**
- * Reads the form, saves the new patient, and sends them to My Status.
+ * Reads the form, saves the new patient, and shows their confirmation.
  */
 function handleCheckIn() {
   const form = document.getElementById('checkin-form');
@@ -109,8 +109,8 @@ function handleCheckIn() {
   setDobPickerDate(DEFAULT_DOB_YEAR, DEFAULT_DOB_MONTH, DEFAULT_DOB_DAY);
   updateAppointmentTimeRow();
 
-  // Take them straight to their status page. (showView is in js/app.js.)
-  showView('patient-status');
+  // Show the confirmation for the exact patient this form just saved.
+  showView('check-in-confirmation', newPatient.id);
 }
 
 /**

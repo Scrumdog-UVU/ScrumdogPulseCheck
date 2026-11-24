@@ -20,12 +20,13 @@ PulseCheck is a **clinic check-in and patient queue** demo.
   `file://` page). Do not add anything that requires a web server.
 - There is no real database. Data is saved in the browser's `localStorage`
   (see `js/storage.js`).
-- It is a **single-user demo**: one person switches between three views
-  using the buttons in the top bar:
+- It is a **single-user demo**: one person switches between patient and staff
+  views. These are the main flows touched by check-in:
 
 | View | Who it's for | What it does |
 |---|---|---|
-| **New Patient** (`new-patient`) | A patient | Check-in form. After checking in, the patient is "logged in" and taken to My Status. |
+| **New Patient** (`new-patient`) | A patient | Check-in form. After checking in, the patient is "logged in" and shown their confirmation. |
+| **Check-In Confirmation** (`check-in-confirmation`) | A checked-in patient | Shows the saved ticket number and lets the patient continue to My Status. Opens after a successful check-in. |
 | **My Status** (`patient-status`) | A checked-in patient | Shows the patient's ticket, place in line, and estimated wait. A drop-down picks which patient you're "logged in" as. |
 | **Staff View** (`admin`) | Clinic staff | Shows both queues. Staff call patients in, mark visits done, or remove patients. |
 | **Survey** (`survey`) | A patient | Simple post-visit satisfaction survey to rate clinic experience and leave comments. |
@@ -38,13 +39,14 @@ unrelated demo content (greetings, guestbooks, marketing pages, etc.).
 ## 2. File layout: where things go
 
 ```
-index.html                  The only page. Contains all three views.
+index.html                  The only page. Contains all of the views.
 css/
   base.css                  Shared look: colors, buttons, cards, form fields, top bar.
   new-patient.css           Styles for the New Patient view only.
   patient-status.css        Styles for the My Status view only.
   admin.css                 Styles for the Staff View only.
   survey.css                Styles for the Survey view only.
+  check-in-confirmation.css Styles for the check-in confirmation only.
 js/
   helpers.js                General tools (escapeHTML, time formatting). No patient logic.
   storage.js                The ONLY file that touches localStorage. Data model lives here.
@@ -55,6 +57,7 @@ js/
     patient-status.js       My Status view logic.
     admin.js                Staff View logic.
     survey.js               Survey view logic.
+    check-in-confirmation.js  Check-in confirmation view logic.
   app.js                    Starts the app and switches views. Loaded last.
 ```
 
@@ -207,8 +210,8 @@ in your PR description.
 1. Open `index.html` by double-clicking it.
 2. Open the browser's developer console (F12 → Console) and confirm there are
    **no red errors**.
-3. Click through all three views and try the full flow: check a patient in →
-   see them on My Status → Call In and Mark Done in Staff View → confirm My
+3. Try the full flow: check a patient in → see their confirmation and choose
+   **View My Status Now** → Call In and Mark Done in Staff View → confirm My
    Status updates.
 4. In your PR description, list which files you changed and why, and flag any
    change to a shared file or to the data model.

@@ -7,7 +7,8 @@
  *
  * TO ADD A NEW VIEW:
  *   1. Add a <section id="view-YOUR-NAME" class="view" hidden> to index.html.
- *   2. Add a <button class="view-tab" data-view="YOUR-NAME"> to the top bar.
+ *   2. Add a <button class="view-tab" data-view="YOUR-NAME"> if it belongs
+ *      in the top bar. A view can also be opened by showView() from another view.
  *   3. Create js/views/YOUR-NAME.js with initYourNameView() and
  *      renderYourNameView(), and add its <script> tag to index.html
  *      (above js/app.js).
@@ -17,7 +18,7 @@
 /**
  * Every view in the app. The key (e.g. 'new-patient') must match:
  *   - the view's section id in index.html:  id="view-new-patient"
- *   - its top-bar button:                   data-view="new-patient"
+ *   - its top-bar button, if it has one:    data-view="new-patient"
  */
 const VIEWS = {
   'new-patient':        { init: initNewPatientView,        render: renderNewPatientView },
@@ -26,7 +27,8 @@ const VIEWS = {
   'staff-kanban':       { init: initStaffKanbanView,       render: renderStaffKanbanView },
   'survey':             { init: initSurveyView,            render: renderSurveyView },
   'dashboard':          { init: initDashboardView,         render: renderDashboardView },
-  'accepted-insurance': { init: initAcceptedInsuranceView, render: renderAcceptedInsuranceView }
+  'accepted-insurance': { init: initAcceptedInsuranceView, render: renderAcceptedInsuranceView },
+  'check-in-confirmation': { init: initCheckInConfirmationView, render: renderCheckInConfirmationView }
 };
 
 /** The view shown the very first time someone opens the app. */
@@ -100,7 +102,8 @@ const VIEW_PERMISSIONS = {
   'staff-kanban': 'canViewAdmin',
   'survey': 'canViewSurvey',
   'dashboard': 'canViewDashboard',
-  'accepted-insurance': 'canViewNewPatient'
+  'accepted-insurance': 'canViewNewPatient',
+  'check-in-confirmation': 'canViewNewPatient'
 };
 
 /**
@@ -273,16 +276,18 @@ function applyTheme(theme) {
  * Any file can call this, e.g. showView('admin').
  *
  * @param {string} viewName - A key from VIEWS, e.g. 'patient-status'.
+ * @param {string} [checkedInPatientId] - The saved patient for a new check-in confirmation.
+ * @returns {void}
  */
-function showView(viewName) {
+function showView(viewName, checkedInPatientId) {
   if (!VIEWS[viewName]) {
     console.error(`showView: there is no view called "${viewName}". Check VIEWS in js/app.js.`);
     return;
   }
 
-  // My Status requires an active demo patient session. A missing or expired
-  // session sends the patient back to check-in instead of picking someone else.
-  if (viewName === 'patient-status' && getCurrentRole() === USER_ROLES.PATIENT) {
+  // Confirmation and My Status require an active demo patient session.
+  const needsPatientSession = viewName === 'check-in-confirmation' || viewName === 'patient-status';
+  if (needsPatientSession && getCurrentRole() === USER_ROLES.PATIENT) {
     if (!getCurrentPatientId()) {
       viewName = DEFAULT_VIEW;
     } else {
@@ -322,7 +327,7 @@ function showView(viewName) {
   });
 
   // Draw the view with the latest saved data.
-  VIEWS[viewName]?.render();
+  VIEWS[viewName]?.render(checkedInPatientId);
   window.scrollTo(0, 0);
 
   // Shift focus to the active view title heading so screen reader users are announced of the view change.
