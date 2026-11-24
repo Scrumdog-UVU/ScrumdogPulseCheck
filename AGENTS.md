@@ -157,6 +157,7 @@ Each patient looks like this (the source of truth is the comment at the top of
 | `name` | `"Jane Doe"` | |
 | `dob` | `"1990-05-15"` | Date of birth (`YYYY-MM-DD`). |
 | `phone` | `"(555) 123-4567"` | |
+| `email` | `"jane@example.com"` | Address used for the check-in confirmation email preview. |
 | `reason` | `"Routine Checkup"` | Matches an `<option>` in the check-in form. |
 | `visitType` | `"walk-in"` | `VISIT_TYPE.WALK_IN` or `VISIT_TYPE.APPOINTMENT`. |
 | `appointmentTime` | `"14:30"` or `null` | 24-hour `HH:MM`. Only for appointments. |
