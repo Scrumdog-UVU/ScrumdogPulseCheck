@@ -291,3 +291,8 @@
 .privacy-summary-list strong {
   color: var(--text-primary);
 }
+
+.email-field-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
