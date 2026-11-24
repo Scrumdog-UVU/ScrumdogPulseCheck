@@ -39,6 +39,9 @@ function initPatientStatusView() {
   // Appointment patients submit a new time from the wait-time ticket.
   document.getElementById('status-reschedule-form').addEventListener('submit', handleAppointmentReschedule);
 
+  // Save a short patient message for the front desk to read in Staff View.
+  document.getElementById('status-message-form').addEventListener('submit', handlePatientMessageSubmit);
+
   // Let the patient give up their spot in line.
   document.getElementById('status-cancel-btn').addEventListener('click', () => {
     const patientId = getCurrentPatientId();
@@ -92,6 +95,7 @@ function renderPatientStatusView() {
   fillTicket(patient);
   fillTurnAlert(patient);
   fillSmsInbox(patient);
+  renderPatientMessages(patient);
 }
 
 /**
@@ -246,6 +250,58 @@ function handleAppointmentReschedule(event) {
   renderPatientStatusView();
   rescheduleMessage.dataset.patientId = patient.id;
   rescheduleMessage.textContent = `Your appointment is now set for ${formatAppointmentTime(newAppointmentTime)}. Your place in line and estimated wait have been updated.`;
+}
+
+/**
+ * Saves a message from the current patient and refreshes their message list.
+ *
+ * @param {SubmitEvent} event - The message form submission event.
+ * @returns {void} Stores the message and updates the My Status screen.
+ */
+function handlePatientMessageSubmit(event) {
+  event.preventDefault();
+
+  const patient = getPatientById(getCurrentPatientId());
+  const messageInput = document.getElementById('status-message-input');
+  const feedback = document.getElementById('status-message-feedback');
+  const messageText = messageInput.value.trim();
+  if (!patient || !messageText) return;
+
+  addPatientMessage({
+    patientId: patient.id,
+    patientName: patient.name,
+    ticketNumber: patient.ticketNumber,
+    text: messageText
+  });
+
+  messageInput.value = '';
+  feedback.textContent = 'Your message is saved and visible in the Staff View on this device.';
+  renderPatientMessages(patient);
+}
+
+/**
+ * Shows the selected patient's messages sent to front-desk staff.
+ *
+ * @param {Object} patient - The patient whose message history is shown.
+ * @returns {void} Draws the patient's saved message history.
+ */
+function renderPatientMessages(patient) {
+  const list = document.getElementById('status-message-list');
+  const messages = getAllPatientMessages()
+    .filter((message) => message.patientId === patient.id)
+    .sort((firstMessage, secondMessage) => firstMessage.createdAt - secondMessage.createdAt);
+
+  if (messages.length === 0) {
+    list.innerHTML = '<p class="empty-msg">You have not sent a message yet.</p>';
+    return;
+  }
+
+  list.innerHTML = messages.map((message) => `
+    <article class="patient-message-item">
+      <p>${escapeHTML(message.text)}</p>
+      <time>${escapeHTML(formatClockTime(message.createdAt))}</time>
+    </article>
+  `).join('');
 }
 
 /* ---------------------------------------------------------------------------
