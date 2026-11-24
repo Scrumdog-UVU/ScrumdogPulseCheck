@@ -13,7 +13,9 @@ PulseCheck opens in **Patient View**. Use the top bar for patient tasks.
 Select **Staff View** in the bottom-right corner to manage the queue. The
 corner link then reads **Patient View** and takes you back to check-in.
 
-1. **New Patient**: fill in the form to check in. You'll be taken to My Status.
+1. **New Patient**: fill in the form to check in. The confirmation screen shows
+   your ticket number. Choose **View My Status Now** to see your place in line
+   and estimated wait.
    At a kiosk, select **Scan QR Code** to fill the form from a clinic-issued QR
    code, then review the details and submit it yourself. In this demo, QR codes
    contain JSON with `name`, `dob` (`YYYY-MM-DD`), `phone`, and `reason` matching

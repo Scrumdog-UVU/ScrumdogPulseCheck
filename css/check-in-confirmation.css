@@ -1,0 +1,92 @@
+/*
+ * =============================================================================
+ * css/check-in-confirmation.css - styles for the check-in confirmation view.
+ * =============================================================================
+ * HTML lives in <section id="view-check-in-confirmation"> in index.html.
+ * The ticket number comes from js/views/check-in-confirmation.js.
+ */
+
+/* ---- CONFIRMATION CARD ---- */
+.check-in-confirmation-card {
+  max-width: 26rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.check-in-confirmation-card .view-title {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+.check-in-confirmation-success {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background-color: var(--accent-mint);
+  color: var(--accent-navy);
+}
+
+.check-in-confirmation-success svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.check-in-confirmation-description {
+  max-width: 33ch;
+  margin: 0 auto 1.25rem;
+  color: var(--text-secondary);
+}
+
+/* ---- TICKET AND NEXT STEP ---- */
+.check-in-confirmation-ticket {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background-color: var(--input-bg);
+  text-align: left;
+}
+
+.check-in-confirmation-ticket-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background-color: var(--card-bg);
+}
+
+.check-in-confirmation-ticket-icon svg,
+.check-in-confirmation-button svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+}
+
+.check-in-confirmation-ticket dt {
+  color: var(--text-secondary);
+}
+
+.check-in-confirmation-ticket dd {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.check-in-confirmation-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  padding-inline: 0.75rem;
+  /* The darker brand blue keeps the white text readable in both themes. */
+  background-color: var(--accent-navy);
+}
