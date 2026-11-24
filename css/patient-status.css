@@ -130,6 +130,62 @@
   color: var(--text-primary);
 }
 
+/* The confirmation preview is shown like a simple email card on My Status. */
+.email-confirmation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+}
+
+.email-confirmation-card[hidden] {
+  display: none;
+}
+
+.email-confirmation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.email-confirmation-heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.email-confirmation-label {
+  color: var(--accent-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.email-confirmation-note,
+.email-confirmation-address {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.email-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+
+.email-preview p {
+  margin: 0;
+}
+
 /* Appointment patients can update their scheduled time from the wait-time ticket. */
 .status-reschedule-form {
   display: flex;
