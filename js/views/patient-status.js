@@ -36,6 +36,9 @@ function initPatientStatusView() {
     renderPatientStatusView();
   });
 
+  // Appointment patients submit a new time from the wait-time ticket.
+  document.getElementById('status-reschedule-form').addEventListener('submit', handleAppointmentReschedule);
+
   // Let the patient give up their spot in line.
   document.getElementById('status-cancel-btn').addEventListener('click', () => {
     const patientId = getCurrentPatientId();
@@ -128,6 +131,22 @@ function fillTicket(patient) {
       ? `Appointment at ${formatAppointmentTime(patient.appointmentTime)}`
       : 'Walk-in';
 
+  // Only waiting appointment patients can change their time from this screen.
+  const rescheduleForm = document.getElementById('status-reschedule-form');
+  const appointmentTimeInput = document.getElementById('status-new-appointment-time');
+  const rescheduleMessage = document.getElementById('status-reschedule-message');
+  const canReschedule = patient.visitType === VISIT_TYPE.APPOINTMENT &&
+    patient.status === PATIENT_STATUS.WAITING;
+  rescheduleForm.hidden = !canReschedule;
+  if (document.activeElement !== appointmentTimeInput) {
+    appointmentTimeInput.value = patient.appointmentTime || '';
+  }
+  if (rescheduleMessage.dataset.patientId !== patient.id) {
+    rescheduleMessage.dataset.patientId = patient.id;
+    rescheduleMessage.textContent = '';
+  }
+
+
   // Support separate SMS and Push consents with fallback to legacy messagingConsent
   const hasSmsConsent = patient.smsConsent !== undefined
     ? Boolean(patient.smsConsent)
@@ -194,6 +213,39 @@ function fillTicket(patient) {
     stats.hidden = true;
     cancelButton.hidden = true;
   }
+}
+
+/**
+ * Saves a new appointment time for the patient currently viewing their status.
+ *
+ * @param {SubmitEvent} event - The form submission event.
+ * @returns {void} Updates the saved appointment time and refreshes the wait estimate.
+ */
+function handleAppointmentReschedule(event) {
+  event.preventDefault();
+
+  const patient = getPatientById(getCurrentPatientId());
+  const appointmentTimeInput = document.getElementById('status-new-appointment-time');
+  const rescheduleMessage = document.getElementById('status-reschedule-message');
+  if (!patient || patient.visitType !== VISIT_TYPE.APPOINTMENT || patient.status !== PATIENT_STATUS.WAITING) {
+    return;
+  }
+
+  const newAppointmentTime = appointmentTimeInput.value;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(newAppointmentTime)) {
+    rescheduleMessage.textContent = 'Please choose a valid appointment time.';
+    return;
+  }
+  if (newAppointmentTime === patient.appointmentTime) {
+    rescheduleMessage.textContent = 'Choose a different time to reschedule your appointment.';
+    return;
+  }
+
+  // The queue is sorted by appointment time, so saving this value also updates the patient's place and wait estimate.
+  updatePatient(patient.id, { appointmentTime: newAppointmentTime });
+  renderPatientStatusView();
+  rescheduleMessage.dataset.patientId = patient.id;
+  rescheduleMessage.textContent = `Your appointment is now set for ${formatAppointmentTime(newAppointmentTime)}. Your place in line and estimated wait have been updated.`;
 }
 
 /* ---------------------------------------------------------------------------

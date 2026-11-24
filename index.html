@@ -402,6 +402,20 @@
             <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>
           </div>
 
+          <!-- Waiting appointment patients can change their appointment time here. -->
+          <form id="status-reschedule-form" class="status-reschedule-form" hidden>
+            <h2 class="reschedule-title">Reschedule Appointment</h2>
+            <p class="reschedule-hint">Choose a new time. Your place in line and estimated wait may change.</p>
+            <div class="reschedule-controls">
+              <div class="form-row">
+                <label for="status-new-appointment-time">New appointment time</label>
+                <input type="time" id="status-new-appointment-time" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Update Time</button>
+            </div>
+            <p id="status-reschedule-message" class="reschedule-message" aria-live="polite" role="status"></p>
+          </form>
+
           <button type="button" id="status-cancel-btn" class="btn btn-danger">Cancel My Check-In</button>
         </div>
 
