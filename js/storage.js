@@ -21,6 +21,7 @@
  *     name:            "Jane Doe"
  *     dob:             "1990-05-15"           // date of birth (YYYY-MM-DD)
  *     phone:           "(555) 123-4567"
+ *     email:           "jane@example.com"      // address for the check-in email preview
  *     reason:          "Routine Checkup"      // one of the <option>s in index.html
  *     visitType:       "walk-in"              // VISIT_TYPE.WALK_IN or VISIT_TYPE.APPOINTMENT
  *     appointmentTime: "14:30" or null        // only set for appointments (24-hour "HH:MM")
@@ -251,7 +252,7 @@ function getPatientById(patientId) {
  * The record starts in the WAITING status.
  *
  * @param {Object} details - What the patient entered on the check-in form:
- *   { name, dob, phone, reason, visitType, appointmentTime, smsConsent, pushConsent, messagingConsent }
+ *   { name, dob, phone, email, reason, visitType, appointmentTime, smsConsent, pushConsent, messagingConsent }
  * @returns {Object} The complete new patient record (including its new id).
  */
 function addPatient(details) {
@@ -273,6 +274,7 @@ function addPatient(details) {
     name: details.name,
     dob: details.dob || null,
     phone: details.phone,
+    email: details.email ? details.email.trim() : '',
     reason: details.reason,
     visitType: details.visitType,
     appointmentTime: details.visitType === VISIT_TYPE.APPOINTMENT ? details.appointmentTime : null,
@@ -470,6 +472,7 @@ function mergePatients(primaryPatientId, secondaryPatientId) {
   // 6. Consolidate date of birth and phone if primary is missing them
   const mergedDob = primary.dob || secondary.dob || null;
   const mergedPhone = primary.phone || secondary.phone;
+  const mergedEmail = primary.email || secondary.email || '';
 
   // 7. Consolidate reason for visit (if secondary had different notes, record them)
   let mergedReason = primary.reason;
@@ -481,6 +484,7 @@ function mergePatients(primaryPatientId, secondaryPatientId) {
   const updatedPrimary = {
     ...primary,
     phone: mergedPhone,
+    email: mergedEmail,
     dob: mergedDob,
     reason: mergedReason,
     visitType: mergedVisitType,
