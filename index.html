@@ -232,6 +232,12 @@
           </div>
 
           <div class="form-row">
+            <label for="patient-email">Email Address</label>
+            <input type="email" id="patient-email" placeholder="e.g. jane@example.com" required maxlength="254" autocomplete="email">
+            <small class="email-field-note">Used for your check-in confirmation.</small>
+          </div>
+
+          <div class="form-row">
             <label for="visit-reason">Reason for Visit</label>
             <!-- To add a reason, add another <option>. value and text should match. -->
             <select id="visit-reason" required>
@@ -283,10 +289,10 @@
             </h2>
             <p class="privacy-summary-intro">Please read this before you agree below and choose your message settings.</p>
             <ul class="privacy-summary-list">
-              <li><strong>What we collect:</strong> the details on this form: your name, date of birth, phone number, reason for visit, allergies, and appointment time.</li>
+              <li><strong>What we collect:</strong> the details on this form: your name, date of birth, phone number, email address, reason for visit, allergies, and appointment time.</li>
               <li><strong>Why we need it:</strong> to hold your place in line, estimate your wait, and help our staff get ready for your visit.</li>
               <li><strong>Who can see it:</strong> clinic staff only. Other patients never see your name or health details.</li>
-              <li><strong>Messages:</strong> if you opt in, we only contact you about this visit, such as when it's your turn. Notifications show your ticket number, not your name. We never send ads or sell your number.</li>
+              <li><strong>Messages:</strong> your check-in confirmation is shown as an email preview in this demo. No real email is sent. If you opt in, we also show SMS or push updates about this visit. We never send ads or sell your contact details.</li>
               <li><strong>Your choice:</strong> messages are optional. You can check in without them, and you can opt out any time by asking the front desk.</li>
             </ul>
             <p class="privacy-summary-footnote">Questions? Ask the front desk for our full privacy policy.</p>
@@ -440,6 +446,24 @@
             <p><strong>Push Notifications:</strong> <span id="status-push-consent"></span></p>
             <p><strong>Checked in at:</strong> <span id="status-checked-in"></span></p>
           </div>
+
+          <!-- The browser-only demo previews the email confirmation without sending an actual email. -->
+          <section id="status-email-confirmation" class="email-confirmation-card" aria-labelledby="status-email-title" hidden>
+            <div class="email-confirmation-heading">
+              <h2 id="status-email-title">Check-In Email Confirmation</h2>
+              <span class="email-confirmation-label">Demo preview</span>
+            </div>
+            <p class="email-confirmation-note">No real email is sent by this browser-only demo.</p>
+            <p class="email-confirmation-address"><strong>To:</strong> <span id="status-email-to"></span></p>
+            <article class="email-preview">
+              <p><strong>Subject:</strong> Your PulseCheck check-in confirmation</p>
+              <p id="status-email-greeting"></p>
+              <p id="status-email-ticket"></p>
+              <p id="status-email-visit"></p>
+              <p id="status-email-time"></p>
+              <p>Thank you. We look forward to seeing you.</p>
+            </article>
+          </section>
 
           <!-- Waiting appointment patients can change their appointment time here. -->
           <form id="status-reschedule-form" class="status-reschedule-form" hidden>
